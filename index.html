@@ -1,1279 +1,489 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio Management RMS Pilot Workflow</title>
-    <meta name="description" content="Portfolio Management RMS Pilot: 7 stages, 2 human gates, 5-week timeline. From mandate to constructed portfolio.">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-    <style>
-    :root { --bg:#F7F5F0; --paper:#FFFFFF; --ink:#13202F; --muted:#5D6B7A; --faint:#8A95A3; --rule:#E6E1D8; --accent:#1F3A5F; --gold:#A8874F;
-      --serif:"Fraunces", Georgia, serif; --sans:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif; --mono:"JetBrains Mono", ui-monospace, monospace; }
-    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0F151C; --paper:#151D26; --ink:#E8E4DC; --muted:#A3ADB8; --faint:#7D8894; --rule:#26313C; --accent:#9DB8DA; --gold:#C9A86E; } }
-    :root[data-theme="dark"] { --bg:#0F151C; --paper:#151D26; --ink:#E8E4DC; --muted:#A3ADB8; --faint:#7D8894; --rule:#26313C; --accent:#9DB8DA; --gold:#C9A86E; }
-
-    /* ── Base ──────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body { font-family: var(--sans); font-size: 15px; line-height: 1.6; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
-    a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
-
-    /* ── Top bar ───────────────────────────────────────────── */
-    .mt-top { border-bottom: 1px solid var(--rule); background: var(--paper); }
-    .mt-top .in { max-width: 1320px; margin: 0 auto; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; font: 13px/1.5 var(--sans); color: var(--muted); }
-    .mt-top b { color: var(--ink); font-weight: 600; letter-spacing: .2px; }
-    .mt-top a { color: var(--accent); text-decoration: none; }
-
-    /* ── Hero ──────────────────────────────────────────────── */
-    .hero { background: var(--bg); }
-    .hero .in { max-width: 1320px; margin: 0 auto; padding: 48px 16px 40px; }
-    .eyebrow { font-size: 12px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--gold); font-weight: 600; }
-    .hero h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(34px,5vw,54px); line-height: 1.05; letter-spacing: -.6px; color: var(--ink); margin: 12px 0 14px; }
-    .hero .subtitle { font-family: var(--serif); font-weight: 400; font-size: clamp(18px,2.2vw,22px); line-height: 1.4; color: var(--muted); max-width: 760px; margin: 0 0 18px; }
-    .meta { font-size: 13px; color: var(--faint); display: flex; flex-wrap: wrap; gap: 4px 16px; }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin: 32px 0; }
-    .stat { padding: 18px 16px 16px 0; }
-    .stat b { display: block; font-family: var(--serif); font-weight: 500; font-size: 40px; line-height: 1; letter-spacing: -.5px; color: var(--ink); }
-    .stat span { display: block; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
-
-    /* ── Hero charts ───────────────────────────────────────── */
-    .charts-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
-    .donut-container { background: var(--paper); border: 1px solid var(--rule); border-radius: 14px; padding: 22px 20px; text-align: center; }
-    .donut-container h3 { font-family: var(--serif); font-weight: 500; font-size: 20px; color: var(--ink); margin-bottom: 12px; text-align: left; }
-    .donut-container svg { max-width: 100%; height: auto; }
-    .d-track { stroke: var(--rule); }
-    .d-num { fill: var(--ink); font-family: var(--serif); font-size: 26px; font-weight: 500; }
-    .d-lbl { fill: var(--muted); font-family: var(--sans); font-size: 8.5px; letter-spacing: 1.2px; font-weight: 600; }
-    .donut-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 16px; margin-top: 14px; font-size: 13px; color: var(--muted); }
-    .donut-legend span { display: flex; align-items: center; gap: 6px; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-
-    /* ── Tabs ──────────────────────────────────────────────── */
-    .tab-bar {
-        position: sticky; top: 0; z-index: 100; background: var(--paper);
-        border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
-        display: flex; overflow-x: auto; padding: 0 max(16px, calc((100% - 1320px) / 2 + 8px));
-    }
-    .tab-bar::-webkit-scrollbar { height: 3px; }
-    .tab-bar::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
-    .tab-btn {
-        background: none; border: none; padding: 14px 14px 12px; font: 500 14px/1.4 var(--sans);
-        color: var(--muted); cursor: pointer; white-space: nowrap;
-        border-bottom: 2px solid transparent; transition: color .15s, border-color .15s;
-    }
-    .tab-btn:hover { color: var(--ink); }
-    .tab-btn.active { color: var(--ink); border-bottom-color: var(--gold); }
-
-    /* ── Tab content ───────────────────────────────────────── */
-    .tab-content { display: none; padding: 32px 16px 24px; max-width: 1320px; margin: 0 auto; }
-    .tab-content.active { display: block; }
-
-    /* ── Card ──────────────────────────────────────────────── */
-    .card { background: var(--paper); border: 1px solid var(--rule); border-radius: 14px; padding: 28px; margin-bottom: 24px; }
-    .card-header { display: flex; align-items: center; gap: 10px 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    .card-header h2 { font-family: var(--serif); font-weight: 500; font-size: 29px; letter-spacing: -.3px; line-height: 1.15; color: var(--ink); margin-right: 4px; }
-    .badge {
-        display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; letter-spacing: .2px;
-        padding: 3px 9px; border-radius: 999px; white-space: nowrap;
-    }
-    .badge i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; background: currentColor; }
-    .b-blue   { background: #E3EBF4; color: #1F3A5F; }
-    .b-green  { background: #E2EFE6; color: #2D5F3D; }
-    .b-amber  { background: #F6EDD6; color: #7A5A12; }
-    .b-purple { background: #EBE5F3; color: #4B3576; }
-    .b-grey   { background: #ECEEF0; color: #46525E; }
-    .task-count { font-size: 13px; color: var(--faint); }
-
-    /* ── Diagram area (white in both modes) ────────────────── */
-    .diagram-wrapper {
-        border: 1px solid var(--rule); border-radius: 12px; padding: 16px;
-        overflow-x: auto; background: #FFFFFF; position: relative; min-height: 200px;
-    }
-    .diagram-wrapper .mermaid { min-width: fit-content; }
-    .diagram-wrapper svg { max-width: none !important; transform-origin: top left; }
-    .diagram-wrapper.fitted { overflow: hidden; }
-    .diagram-wrapper { -webkit-overflow-scrolling: touch; }
-    .diagram-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-end; }
-    .btn {
-        padding: 7px 14px; border-radius: 8px; border: 1px solid var(--rule);
-        background: var(--paper); color: var(--muted); cursor: pointer; font: 500 13px/1.4 var(--sans);
-        transition: border-color .15s, color .15s; display: inline-flex; align-items: center; gap: 6px;
-    }
-    .btn:hover { border-color: var(--gold); color: var(--ink); }
-    .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-    .btn-primary:hover { color: var(--bg); opacity: .9; }
-
-    /* ── Lightbox ──────────────────────────────────────────── */
-    .lightbox {
-        display: none; position: fixed; inset: 0; z-index: 1000;
-        background: rgba(15,21,28,0.88); justify-content: center; align-items: center; flex-direction: column;
-    }
-    .lightbox.open { display: flex; }
-    .lightbox-controls { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; z-index: 1001; }
-    .lightbox-controls button {
-        width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25);
-        background: rgba(255,255,255,0.1); color: #fff; font: 500 16px var(--sans); cursor: pointer; transition: background .2s;
-    }
-    .lightbox-controls button:hover { background: rgba(255,255,255,0.25); }
-    .lightbox-canvas { overflow: auto; max-width: 95vw; max-height: 90vh; cursor: grab; border-radius: 12px; }
-    .lightbox-canvas:active { cursor: grabbing; }
-    .lightbox-canvas svg { background: #fff; border-radius: 12px; display: block; }
-    .lightbox-zoom-info {
-        position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-        background: rgba(0,0,0,0.5); color: #fff; padding: 5px 12px; border-radius: 999px; font: 500 12px var(--mono);
-    }
-
-    /* ── Summary tab ───────────────────────────────────────── */
-    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px; }
-    .summary-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 14px; padding: 24px; min-width: 0; overflow-x: auto; }
-    .summary-card h3 { font-family: var(--serif); font-weight: 500; font-size: 21px; color: var(--ink); margin-bottom: 16px; }
-    .bar-chart { display: flex; flex-direction: column; gap: 10px; }
-    .bar-row { display: flex; align-items: center; gap: 10px; }
-    .bar-label { width: 120px; font-size: 13px; color: var(--muted); text-align: right; flex-shrink: 0; }
-    .bar-track { flex: 1; min-width: 0; background: color-mix(in srgb, var(--rule) 55%, transparent); border-radius: 6px; height: 26px; position: relative; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px;
-        font-size: 12px; font-weight: 500; color: #1F3A5F; white-space: nowrap; overflow: hidden; transition: width .6s ease; }
-    .bar-value { font-size: 13px; width: 36px; text-align: left; color: var(--muted); flex-shrink: 0; }
-
-    /* ── Pipeline stacked bars ─────────────────────────────── */
-    .pipeline-bar { display: flex; border-radius: 6px; overflow: hidden; height: 26px; }
-    .pipeline-bar .seg { display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; color: #2B3540; }
-
-    /* ── Detail tables ─────────────────────────────────────── */
-    .detail-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    .detail-table th { padding: 8px 10px 8px 0; text-align: left; font-size: 11.5px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; color: var(--faint); border-bottom: 1px solid var(--rule); }
-    .detail-table td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--rule); color: var(--ink); vertical-align: top; }
-    .detail-table td + td { color: var(--muted); }
-    .detail-table tr:last-child td { border-bottom: none; }
-
-    /* ── Legend ────────────────────────────────────────────── */
-    .legend-section { margin-top: 24px; }
-    .legend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 24px; }
-    .legend-card h4 { font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 10px; }
-    .legend-item { display: flex; align-items: flex-start; gap: 12px; padding: 7px 0; font-size: 13.5px; border-top: 1px solid var(--rule); }
-    .legend-swatch { width: 26px; height: 16px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.12); flex-shrink: 0; margin-top: 3px; }
-    .lg-t b { display: block; font-weight: 600; color: var(--ink); }
-    .lg-t span { display: block; color: var(--muted); font-size: 13px; }
-
-    /* ── Scroll animations ─────────────────────────────────── */
-    .reveal { opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s ease; }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-
-    /* ── Footer ────────────────────────────────────────────── */
-    .footer { margin-top: 56px; }
-    .footer .in { max-width: 1320px; margin: 0 auto; padding: 20px 16px 40px; border-top: 1px solid var(--rule); color: var(--faint); font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
-
-    /* ── Responsive ────────────────────────────────────────── */
-    @media (max-width: 768px) {
-        /* Phones: show diagrams at full size and let the reader pan inside the box */
-        .diagram-wrapper, .diagram-wrapper.fitted { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; height: auto !important; }
-        .diagram-wrapper svg { transform: none !important; }
-        .hero .in { padding: 32px 16px 28px; }
-        .stat b { font-size: 34px; }
-        .tab-btn { padding: 12px 12px 10px; font-size: 13.5px; }
-        .tab-content { padding: 20px 16px; }
-        .card { padding: 18px 16px; }
-        .card-header h2 { font-size: 24px; }
-        .summary-card { padding: 18px 16px; }
-        .bar-label { width: 96px; font-size: 12px; }
-    }
-
-    </style>
-</head>
-<body>
-<div class="mt-top"><div class="in"><span><b>mindtensorML</b> · Process maps for AI in investment work</span><span>By Caesar Rana, CFA, APMG CP3P · <a href="https://mindtensorml.github.io/">All maps</a></span></div></div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- HERO                                                    -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <section class="hero"><div class="in">
-        <div class="eyebrow">US equities · Five-week pilot</div>
-        <h1>Portfolio Management RMS Pilot Workflow</h1>
-        <p class="subtitle">A five-week pilot for an AI-assisted US equity value portfolio, from mandate to mock investment committee, with human gates where judgment matters.</p>
-
-        <div class="stats">
-            <div class="stat"><b>7</b><span>Stages</span></div>
-            <div class="stat"><b>2</b><span>Human Gates</span></div>
-            <div class="stat"><b>5</b><span>Weeks</span></div>
-            <div class="stat"><b>33T</b><span>Possible Combos</span></div>
-            <div class="stat"><b>1</b><span>Portfolio</span></div>
-        </div>
-
-        <div class="charts-row">
-            <div class="donut-container">
-                <h3>Stage Distribution by Week</h3>
-                <svg viewBox="0 0 180 180" width="180" height="180" xmlns="http://www.w3.org/2000/svg">
-                    <circle class="d-track" cx="90" cy="90" r="70" fill="none" stroke-width="24" />
-                    <circle cx="90" cy="90" r="70" fill="none" stroke="#1F3A5F" stroke-width="24" stroke-dasharray="87.96 351.86" stroke-dashoffset="0" />
-                    <circle cx="90" cy="90" r="70" fill="none" stroke="#45628A" stroke-width="24" stroke-dasharray="87.96 351.86" stroke-dashoffset="-87.96" />
-                    <circle cx="90" cy="90" r="70" fill="none" stroke="#7690B1" stroke-width="24" stroke-dasharray="87.96 351.86" stroke-dashoffset="-175.93" />
-                    <circle cx="90" cy="90" r="70" fill="none" stroke="#A8BBD2" stroke-width="24" stroke-dasharray="87.96 351.86" stroke-dashoffset="-263.89" />
-                    <circle cx="90" cy="90" r="70" fill="none" stroke="#D3DDE8" stroke-width="24" stroke-dasharray="87.96 351.86" stroke-dashoffset="-351.86" />
-                    <text class="d-num" x="90" y="90" text-anchor="middle">5</text>
-                    <text class="d-lbl" x="90" y="108" text-anchor="middle">WEEKS</text>
-                </svg>
-                <div class="donut-legend">
-                    <span><span class="dot" style="background:#1F3A5F"></span>Wk 1: Foundation</span>
-                    <span><span class="dot" style="background:#45628A"></span>Wk 2: Screening</span>
-                    <span><span class="dot" style="background:#7690B1"></span>Wk 3: Thesis</span>
-                    <span><span class="dot" style="background:#A8BBD2"></span>Wk 4: Construction</span>
-                    <span><span class="dot" style="background:#D3DDE8"></span>Wk 5: Eval</span>
-                </div>
-            </div>
-
-            <div class="donut-container">
-                <h3>LLM Value Propositions</h3>
-                <svg viewBox="0 0 180 180" width="180" height="180" xmlns="http://www.w3.org/2000/svg">
-                    <circle class="d-track" cx="90" cy="90" r="70" fill="none" stroke-width="24" />
-                    <circle cx="90" cy="90" r="70" fill="none" stroke="#5E8A6B" stroke-width="24" stroke-dasharray="109.96 329.87" stroke-dashoffset="0" />
-                    <circle cx="90" cy="90" r="70" fill="none" stroke="#4E6E96" stroke-width="24" stroke-dasharray="109.96 329.87" stroke-dashoffset="-109.96" />
-                    <circle cx="90" cy="90" r="70" fill="none" stroke="#7D6AA3" stroke-width="24" stroke-dasharray="109.96 329.87" stroke-dashoffset="-219.91" />
-                    <circle cx="90" cy="90" r="70" fill="none" stroke="#B9965C" stroke-width="24" stroke-dasharray="109.96 329.87" stroke-dashoffset="-329.87" />
-                    <text class="d-num" x="90" y="90" text-anchor="middle">4</text>
-                    <text class="d-lbl" x="90" y="108" text-anchor="middle">LLM WINS</text>
-                </svg>
-                <div class="donut-legend">
-                    <span><span class="dot" style="background:#5E8A6B"></span>Knowledge Graph</span>
-                    <span><span class="dot" style="background:#4E6E96"></span>Thesis Architect</span>
-                    <span><span class="dot" style="background:#7D6AA3"></span>Pre-IC Stress Test</span>
-                    <span><span class="dot" style="background:#B9965C"></span>Assumption Watchdog</span>
-                </div>
-            </div>
-        </div>
-    </div></section>
-
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- TABS                                                    -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <nav class="tab-bar">
-        <button class="tab-btn active" data-tab="tab-0">Master Flow</button>
-        <button class="tab-btn" data-tab="tab-1">Foundation</button>
-        <button class="tab-btn" data-tab="tab-2">Stages 1-2</button>
-        <button class="tab-btn" data-tab="tab-3">Stages 3-4</button>
-        <button class="tab-btn" data-tab="tab-4">Gate 1</button>
-        <button class="tab-btn" data-tab="tab-5">Stage 5</button>
-        <button class="tab-btn" data-tab="tab-6">Stages 6-7</button>
-        <button class="tab-btn" data-tab="tab-7">Evaluation</button>
-        <button class="tab-btn" data-tab="tab-8">Summary</button>
-    </nav>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- TAB 0: MASTER FLOW                                      -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="tab-content active" id="tab-0">
-        <div class="card reveal">
-            <div class="card-header">
-                <h2>Master Pilot Workflow</h2>
-                <span class="badge b-blue"><i></i>End-to-End</span>
-            </div>
-            <div class="diagram-wrapper" data-diagram-idx="0">
-                <pre class="mermaid" style="display:none" data-idx="0">%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#C8E6C9', 'primaryTextColor': '#333', 'primaryBorderColor': '#999', 'lineColor': '#666', 'secondaryColor': '#FFF9C4', 'tertiaryColor': '#FFCDD2'}}}%%
-
-flowchart TD
-    classDef green fill:#C8E6C9,stroke:#999,color:#333
-    classDef yellow fill:#FFF9C4,stroke:#999,color:#333
-    classDef pink fill:#FFCDD2,stroke:#999,color:#333
-    classDef gate fill:#E1BEE7,stroke:#6A1B9A,stroke-width:3px,color:#333
-    classDef terminal fill:#B0BEC5,stroke:#546E7A,color:#333
-    classDef deliver fill:#BBDEFB,stroke:#1565C0,stroke-width:3px,color:#333
-
-    START(["START — RMS Pilot"]):::terminal
-
-    subgraph W1["WEEK 1 — FOUNDATION"]
-        direction LR
-        F1["Define Mandate / IPS"]:::pink
-        F2["Select Universe\n(Russell 3000)"]:::green
-        F3["Build Ingestion\nPipeline"]:::green
-        F1 ~~~ F2 ~~~ F3
-    end
-
-    subgraph W2["WEEK 2 — SCREENING & RESEARCH"]
-        direction TB
-        S1["STAGE 1: Idea Generation\n5 valuation filters\nQuality gates"]:::green
-        S1W["Watchlist: 30-50 names"]:::yellow
-        S2["STAGE 2: Research Aggregation\nBuild dossiers per name"]:::green
-        S2K["Living Knowledge Graph\nQueryable, sourced"]:::green
-        S1 --> S1W --> S2 --> S2K
-    end
-
-    subgraph W3["WEEK 3 — THESIS DEVELOPMENT"]
-        direction TB
-        S3["STAGE 3: Simulated Debate\nBull vs Bear per name"]:::green
-        S3F["Human Filter\n~10-15 names survive"]:::yellow
-        S4["STAGE 4: Thesis Architect\nLLM drafts IC memos"]:::green
-        S4E["PM Edits, Not Writes\nBlank page → Red pen"]:::yellow
-        S3 --> S3F --> S4 --> S4E
-    end
-
-    subgraph W4["WEEK 4 — DECISION & CONSTRUCTION"]
-        direction TB
-        G1{"GATE 1: ENTRY\nPre-IC Stress Test\n5 hardest questions/name"}:::gate
-        G1A["Approve"]:::green
-        G1R["Reject"]:::pink
-        G1F["Refine"]:::yellow
-        S5["STAGE 5: Portfolio Construction\nFactor optimization\nVehicle assignment\nDrawdown validation"]:::green
-        DEL["DELIVERABLE\nConstructed Portfolio\n+ IC Memorandum"]:::deliver
-        G1 --> G1A & G1R & G1F
-        G1A --> S5
-        S5 --> DEL
-    end
-
-    subgraph OPT["OPTIONAL — TIME SIMULATION"]
-        direction TB
-        S6["STAGE 6: Assumption Watchdog\nSimulate T-6mo forward\nFlag broken theses"]:::green
-        G2{"GATE 2: EXIT\nThesis breaking?"}:::gate
-        G2E["Exit"]:::pink
-        G2H["Hold"]:::yellow
-        G2A["Add"]:::green
-        S6 --> G2
-        G2 --> G2E & G2H & G2A
-    end
-
-    subgraph W5["WEEK 5 — EVALUATION"]
-        direction TB
-        E1["Mock IC Presentation\n2-3 reviewers"]:::pink
-        E2["Grill the thesis\nQuery the knowledge graph\nRate memo quality"]:::yellow
-        E1 --> E2
-    end
-
-    START --> W1
-    W1 --> W2
-    W2 --> W3
-    W3 --> W4
-    G1F -.-> S4
-    W4 --> OPT
-    W4 --> W5
-    OPT --> W5
-    S4E ~~~ G1
-
-    style W1 fill:#E8EAF6,stroke:#3949AB,color:#333
-    style W2 fill:#E3F2FD,stroke:#1565C0,color:#333
-    style W3 fill:#FFF3E0,stroke:#E65100,color:#333
-    style W4 fill:#F3E5F5,stroke:#6A1B9A,color:#333
-    style OPT fill:#ECEFF1,stroke:#546E7A,color:#333,stroke-dasharray:5 5
-    style W5 fill:#E8F5E9,stroke:#2E7D32,color:#333</pre>
-                <div class="diagram-placeholder" id="placeholder-0">
-                    <p style="text-align:center;color:#999;padding:40px 0;">Loading diagram...</p>
-                </div>
-            </div>
-            <div class="diagram-actions">
-                <button class="btn" onclick="copyMermaid(0)" title="Copy Mermaid source">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                    Copy Source
-                </button>
-                <button class="btn btn-primary" onclick="openLightbox(0)" title="View fullscreen">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
-                    Fullscreen
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- TAB 1: FOUNDATION                                       -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="tab-content" id="tab-1">
-        <div class="card reveal">
-            <div class="card-header">
-                <h2>Foundation, week 1</h2>
-                <span class="badge b-blue"><i></i>Setup</span>
-                <span class="task-count">3 parallel tracks</span>
-            </div>
-            <div class="diagram-wrapper" data-diagram-idx="1">
-                <pre class="mermaid" style="display:none" data-idx="1">%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#C8E6C9', 'primaryTextColor': '#333', 'primaryBorderColor': '#999', 'lineColor': '#666'}}}%%
-
-flowchart TD
-    classDef green fill:#C8E6C9,stroke:#999,color:#333
-    classDef yellow fill:#FFF9C4,stroke:#999,color:#333
-    classDef pink fill:#FFCDD2,stroke:#999,color:#333
-    classDef terminal fill:#B0BEC5,stroke:#546E7A,color:#333
-
-    START(["Foundation — Week 1"]):::terminal
-
-    subgraph MANDATE["Define Mandate / IPS"]
-        direction TB
-        M1["Define endowment profile\n$500M AUM, $50M value sleeve"]:::pink
-        M2["Set benchmark\nRussell 1000 Value +200bps"]:::pink
-        M3["Establish constraints\nMax 5% single position\nQuarterly IC review"]:::pink
-        M4["Define factor targets\nβ_HML ≥ 0.40, β_SMB ≥ 0.25"]:::pink
-        M1 --> M2 --> M3 --> M4
-    end
-
-    subgraph UNIVERSE["Select Universe"]
-        direction TB
-        U1["Start with Russell 3000"]:::green
-        U2["Filter to US public equities\nMicro-cap through Large-cap"]:::green
-        U3["Confirm public data\navailability per name"]:::green
-        U1 --> U2 --> U3
-    end
-
-    subgraph PIPELINE["Build Ingestion Pipeline"]
-        direction TB
-        P1["SEC EDGAR connector\n10-K, 10-Q, 8-K filings"]:::green
-        P2["Earnings transcript\ningestion"]:::green
-        P3["Financial data API\n(free tier: FMP, SEC)"]:::green
-        P4["News feed aggregator"]:::green
-        P5["Document chunking\n& vector indexing"]:::yellow
-        P1 & P2 & P3 & P4 --> P5
-    end
-
-    START --> MANDATE & UNIVERSE & PIPELINE
-
-    READY(["Ready for Stage 1"]):::terminal
-    MANDATE & UNIVERSE & PIPELINE --> READY
-
-    style MANDATE fill:#FCE4EC,stroke:#C62828,color:#333
-    style UNIVERSE fill:#E3F2FD,stroke:#1565C0,color:#333
-    style PIPELINE fill:#E8F5E9,stroke:#2E7D32,color:#333</pre>
-                <div class="diagram-placeholder" id="placeholder-1">
-                    <p style="text-align:center;color:#999;padding:40px 0;">Loading diagram...</p>
-                </div>
-            </div>
-            <div class="diagram-actions">
-                <button class="btn" onclick="copyMermaid(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Source</button>
-                <button class="btn btn-primary" onclick="openLightbox(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Fullscreen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- TAB 2: STAGES 1-2                                       -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="tab-content" id="tab-2">
-        <div class="card reveal">
-            <div class="card-header">
-                <h2>Stages 1-2: Screening & Research, week 2</h2>
-                <span class="badge b-green"><i></i>LLM-Driven</span>
-            </div>
-            <div class="diagram-wrapper" data-diagram-idx="2">
-                <pre class="mermaid" style="display:none" data-idx="2">%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#C8E6C9', 'primaryTextColor': '#333', 'primaryBorderColor': '#999', 'lineColor': '#666'}}}%%
-
-flowchart TD
-    classDef green fill:#C8E6C9,stroke:#999,color:#333
-    classDef yellow fill:#FFF9C4,stroke:#999,color:#333
-    classDef pink fill:#FFCDD2,stroke:#999,color:#333
-    classDef terminal fill:#B0BEC5,stroke:#546E7A,color:#333
-    classDef kgraph fill:#B3E5FC,stroke:#0277BD,stroke-width:2px,color:#333
-
-    START(["Week 2 — Screening & Research"]):::terminal
-
-    subgraph S1["STAGE 1: IDEA GENERATION"]
-        direction TB
-        V1["Valuation Screen 1\nP/E ratio filter"]:::green
-        V2["Valuation Screen 2\nP/B ratio filter"]:::green
-        V3["Valuation Screen 3\nEV/EBITDA filter"]:::green
-        V4["Valuation Screen 4\nFCF yield filter"]:::green
-        V5["Valuation Screen 5\nDividend yield filter"]:::green
-        V1 & V2 & V3 & V4 & V5 --> QG
-
-        QG["Quality Gates\nFCF test, Leverage test\nDividend sustainability test"]:::yellow
-        QG --> WL
-        WL["Output: Watchlist\n30-50 names\nSector distribution\nInitial factor check"]:::green
-    end
-
-    subgraph S2["STAGE 2: RESEARCH AGGREGATION"]
-        direction TB
-        D1["Per-name dossier build"]:::green
-
-        subgraph SOURCES["Data Sources (Parallel)"]
-            direction LR
-            A["10-K / 10-Q\nanalysis"]:::green
-            B["Earnings call\ntranscripts\n(4 quarters)"]:::green
-            C["Management\ncommentary\nextraction"]:::green
-            D["Competitor\nlandscape\nmapping"]:::green
-            E["Material news\n& events"]:::green
-        end
-
-        D1 --> SOURCES
-        SOURCES --> KG
-
-        KG["LIVING KNOWLEDGE GRAPH\nQueryable document store\nSourced answers\nCross-entity references\n'What has mgmt said about margins?'"]:::kgraph
-    end
-
-    START --> S1
-    S1 --> S2
-
-    OUT(["30-50 names with full dossiers\nready for debate"]):::terminal
-    S2 --> OUT
-
-    style S1 fill:#E8F5E9,stroke:#2E7D32,color:#333
-    style S2 fill:#E3F2FD,stroke:#1565C0,color:#333
-    style SOURCES fill:#F5F5F5,stroke:#999,color:#333</pre>
-                <div class="diagram-placeholder" id="placeholder-2">
-                    <p style="text-align:center;color:#999;padding:40px 0;">Loading diagram...</p>
-                </div>
-            </div>
-            <div class="diagram-actions">
-                <button class="btn" onclick="copyMermaid(2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Source</button>
-                <button class="btn btn-primary" onclick="openLightbox(2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Fullscreen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- TAB 3: STAGES 3-4                                       -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="tab-content" id="tab-3">
-        <div class="card reveal">
-            <div class="card-header">
-                <h2>Stages 3-4: Debate & Thesis, week 3</h2>
-                <span class="badge b-amber"><i></i>Hybrid</span>
-            </div>
-            <div class="diagram-wrapper" data-diagram-idx="3">
-                <pre class="mermaid" style="display:none" data-idx="3">%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#C8E6C9', 'primaryTextColor': '#333', 'primaryBorderColor': '#999', 'lineColor': '#666'}}}%%
-
-flowchart TD
-    classDef green fill:#C8E6C9,stroke:#999,color:#333
-    classDef yellow fill:#FFF9C4,stroke:#999,color:#333
-    classDef pink fill:#FFCDD2,stroke:#999,color:#333
-    classDef terminal fill:#B0BEC5,stroke:#546E7A,color:#333
-    classDef memo fill:#E1BEE7,stroke:#6A1B9A,stroke-width:2px,color:#333
-
-    START(["Week 3 — Debate & Thesis"]):::terminal
-
-    subgraph S3["STAGE 3: SIMULATED DEBATE"]
-        direction TB
-        DB1["Per-candidate:\nLLM generates Bull Case"]:::green
-        DB2["Per-candidate:\nLLM generates Bear Case"]:::green
-        DB3["Identify strongest\ncounterarguments"]:::green
-        DB4["Cross-name correlation\nrisk check"]:::yellow
-        DB5["Human reviews\ndebate output"]:::pink
-        DB6["Advance high-conviction\nnames (~10-15 survive)"]:::yellow
-
-        DB1 & DB2 --> DB3
-        DB3 --> DB4 --> DB5 --> DB6
-    end
-
-    subgraph S4["STAGE 4: THESIS ARCHITECT"]
-        direction TB
-        T1["LLM drafts per-name\nIC Memo from\nKnowledge Graph"]:::green
-
-        subgraph MEMO["IC Memo Components"]
-            direction LR
-            MC1["Executive\nSummary &\nRecommendation"]:::green
-            MC2["Valuation\nDCF + Comps\nBull/Base/Bear"]:::green
-            MC3["Catalyst\nTimeline &\nDrivers"]:::green
-            MC4["Risk Register\n& Kill\nCriteria"]:::green
-        end
-
-        T1 --> MEMO
-        MEMO --> T2
-
-        T2["PM Reviews & Edits\nChallenges assumptions\nAdjusts conviction\nBlank page → Red pen"]:::yellow
-    end
-
-    START --> S3
-    S3 --> S4
-
-    OUT(["10-15 names with\ndraft IC memos\nready for stress test"]):::terminal
-    S4 --> OUT
-
-    style S3 fill:#FFF3E0,stroke:#E65100,color:#333
-    style S4 fill:#F3E5F5,stroke:#6A1B9A,color:#333
-    style MEMO fill:#F5F5F5,stroke:#999,color:#333</pre>
-                <div class="diagram-placeholder" id="placeholder-3">
-                    <p style="text-align:center;color:#999;padding:40px 0;">Loading diagram...</p>
-                </div>
-            </div>
-            <div class="diagram-actions">
-                <button class="btn" onclick="copyMermaid(3)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Source</button>
-                <button class="btn btn-primary" onclick="openLightbox(3)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Fullscreen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- TAB 4: GATE 1                                           -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="tab-content" id="tab-4">
-        <div class="card reveal">
-            <div class="card-header">
-                <h2>Gate 1: Entry Decision, week 4</h2>
-                <span class="badge b-purple"><i></i>Human Gate</span>
-            </div>
-            <div class="diagram-wrapper" data-diagram-idx="4">
-                <pre class="mermaid" style="display:none" data-idx="4">%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#C8E6C9', 'primaryTextColor': '#333', 'primaryBorderColor': '#999', 'lineColor': '#666'}}}%%
-
-flowchart TD
-    classDef green fill:#C8E6C9,stroke:#999,color:#333
-    classDef yellow fill:#FFF9C4,stroke:#999,color:#333
-    classDef pink fill:#FFCDD2,stroke:#999,color:#333
-    classDef gate fill:#E1BEE7,stroke:#6A1B9A,stroke-width:3px,color:#333
-    classDef terminal fill:#B0BEC5,stroke:#546E7A,color:#333
-
-    START(["Gate 1 — Entry Decision"]):::terminal
-
-    subgraph STRESS["PRE-IC STRESS TEST (Per Name)"]
-        direction TB
-        ST1["LLM attacks the thesis\nfinds weakest assumptions"]:::green
-        ST2["Generate 5 hardest\nquestions an IC member\nwould ask"]:::green
-        ST3["Identify data gaps\nand logical inconsistencies"]:::green
-        ST4["Produce stress test\nreport per name"]:::yellow
-        ST1 --> ST2 --> ST3 --> ST4
-    end
-
-    GATE{"HUMAN DECISION\nPer Name"}:::gate
-
-    APPROVE["APPROVE\nName enters portfolio\nconstruction"]:::green
-    REJECT["REJECT\nName removed\nfrom consideration"]:::pink
-    REFINE["REFINE\nSend back to\nStage 4 for\nadditional work"]:::yellow
-
-    START --> STRESS
-    STRESS --> GATE
-    GATE -->|"Conviction holds"| APPROVE
-    GATE -->|"Thesis fails"| REJECT
-    GATE -->|"Needs more work"| REFINE
-
-    REFINE -.->|"Back to\nThesis Architect"| LOOP(["Return to Stage 4"]):::terminal
-    APPROVE --> NEXT(["Proceed to\nPortfolio Construction"]):::terminal
-
-    style STRESS fill:#F3E5F5,stroke:#6A1B9A,color:#333</pre>
-                <div class="diagram-placeholder" id="placeholder-4">
-                    <p style="text-align:center;color:#999;padding:40px 0;">Loading diagram...</p>
-                </div>
-            </div>
-            <div class="diagram-actions">
-                <button class="btn" onclick="copyMermaid(4)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Source</button>
-                <button class="btn btn-primary" onclick="openLightbox(4)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Fullscreen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- TAB 5: STAGE 5                                          -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="tab-content" id="tab-5">
-        <div class="card reveal">
-            <div class="card-header">
-                <h2>Stage 5: Portfolio Construction, week 4</h2>
-                <span class="badge b-green"><i></i>LLM + Quant</span>
-                <span class="task-count">Deliverable produced here</span>
-            </div>
-            <div class="diagram-wrapper" data-diagram-idx="5">
-                <pre class="mermaid" style="display:none" data-idx="5">%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#C8E6C9', 'primaryTextColor': '#333', 'primaryBorderColor': '#999', 'lineColor': '#666'}}}%%
-
-flowchart TD
-    classDef green fill:#C8E6C9,stroke:#999,color:#333
-    classDef yellow fill:#FFF9C4,stroke:#999,color:#333
-    classDef pink fill:#FFCDD2,stroke:#999,color:#333
-    classDef terminal fill:#B0BEC5,stroke:#546E7A,color:#333
-    classDef deliver fill:#BBDEFB,stroke:#1565C0,stroke-width:3px,color:#333
-
-    START(["Stage 5 — Portfolio Construction"]):::terminal
-
-    subgraph OPT["FACTOR OPTIMIZATION LOOP"]
-        direction TB
-        O1["Load approved names\nfrom Gate 1"]:::green
-        O2["Assign initial weights\nbased on conviction"]:::green
-        O3["Calculate factor exposures\nβ_HML, β_SMB"]:::green
-        O4{"β_HML ≥ 0.40?\nβ_SMB ≥ 0.25?"}:::yellow
-        O5["Adjust weights within\nsleeve bounds"]:::green
-        O1 --> O2 --> O3 --> O4
-        O4 -->|"No"| O5 --> O3
-        O4 -->|"Yes"| PASS
-        PASS["Factor targets met"]:::green
-    end
-
-    subgraph VEH["VEHICLE ASSIGNMENT"]
-        direction TB
-        VA1["Micro / Small / SMID caps\n→ SMA\n(illiquidity access, tax efficiency)"]:::green
-        VA2["Mid / Large caps\n→ ETF\n(cost, liquidity)"]:::green
-    end
-
-    subgraph VAL["DRAWDOWN VALIDATION"]
-        direction TB
-        DD1["Historical stress test\n(GFC, COVID, 2022)"]:::yellow
-        DD2["Max drawdown check\nvs mandate tolerance"]:::yellow
-        DD3["Correlation stress\nacross holdings"]:::yellow
-        DD1 --> DD2 --> DD3
-    end
-
-    subgraph DEL["DELIVERABLE"]
-        direction TB
-        P1["Constructed Portfolio\nPositions + Weights\nby Vehicle"]:::deliver
-        P2["IC Memorandum\nCompiled thesis per name\nPortfolio-level analytics"]:::deliver
-        P3["Risk Report\nFactor exposures\nConcentration analysis\nDrawdown profile"]:::deliver
-    end
-
-    START --> OPT
-    OPT --> VEH
-    VEH --> VAL
-    VAL --> DEL
-
-    style OPT fill:#E8F5E9,stroke:#2E7D32,color:#333
-    style VEH fill:#E3F2FD,stroke:#1565C0,color:#333
-    style VAL fill:#FFF3E0,stroke:#E65100,color:#333
-    style DEL fill:#E8EAF6,stroke:#283593,color:#333</pre>
-                <div class="diagram-placeholder" id="placeholder-5">
-                    <p style="text-align:center;color:#999;padding:40px 0;">Loading diagram...</p>
-                </div>
-            </div>
-            <div class="diagram-actions">
-                <button class="btn" onclick="copyMermaid(5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Source</button>
-                <button class="btn btn-primary" onclick="openLightbox(5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Fullscreen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- TAB 6: STAGES 6-7                                       -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="tab-content" id="tab-6">
-        <div class="card reveal">
-            <div class="card-header">
-                <h2>Stages 6-7: Monitoring & Rebalancing, optional</h2>
-                <span class="badge b-grey"><i></i>Simulated</span>
-            </div>
-            <div class="diagram-wrapper" data-diagram-idx="6">
-                <pre class="mermaid" style="display:none" data-idx="6">%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#C8E6C9', 'primaryTextColor': '#333', 'primaryBorderColor': '#999', 'lineColor': '#666'}}}%%
-
-flowchart TD
-    classDef green fill:#C8E6C9,stroke:#999,color:#333
-    classDef yellow fill:#FFF9C4,stroke:#999,color:#333
-    classDef pink fill:#FFCDD2,stroke:#999,color:#333
-    classDef gate fill:#E1BEE7,stroke:#6A1B9A,stroke-width:3px,color:#333
-    classDef terminal fill:#B0BEC5,stroke:#546E7A,color:#333
-    classDef watchdog fill:#FFCCBC,stroke:#BF360C,stroke-width:2px,color:#333
-
-    START(["Stages 6-7 — Time Simulation"]):::terminal
-
-    subgraph SETUP["TIME MACHINE SETUP"]
-        direction TB
-        TS1["Construct portfolio as of\nT-6 months"]:::green
-        TS2["Feed in actual market data\nthat followed"]:::green
-        TS1 --> TS2
-    end
-
-    subgraph S6["STAGE 6: ASSUMPTION WATCHDOG"]
-        direction TB
-        W1["Monitor tagged assumptions\nper position continuously"]:::green
-        W2["Compare actual data\nvs thesis predictions"]:::green
-        W3["Generate drift alerts\n'Base case assumed X.\nNew data suggests Y.'"]:::watchdog
-        W4["Produce follow-up memo\nper flagged position"]:::yellow
-        W1 --> W2 --> W3 --> W4
-    end
-
-    G2{"GATE 2: EXIT DECISION\nThesis breaking?"}:::gate
-
-    EXIT["EXIT\nRemove position\nDocument post-mortem"]:::pink
-    HOLD["HOLD\nThesis intact\nMaintain position"]:::green
-    ADD["ADD\nThesis strengthened\nIncrease weight"]:::green
-
-    subgraph S7["STAGE 7: REBALANCING"]
-        direction TB
-        R1["Recalculate factor\nexposures post-changes"]:::green
-        R2["Check weight constraints\nvs mandate"]:::yellow
-        R3["Produce updated\nportfolio snapshot"]:::green
-        R1 --> R2 --> R3
-    end
-
-    START --> SETUP --> S6
-    S6 --> G2
-    G2 -->|"Breaking"| EXIT
-    G2 -->|"Intact"| HOLD
-    G2 -->|"Stronger"| ADD
-    EXIT & HOLD & ADD --> S7
-
-    OUT(["Updated portfolio\nfor evaluation"]):::terminal
-    S7 --> OUT
-
-    style SETUP fill:#ECEFF1,stroke:#546E7A,color:#333
-    style S6 fill:#FFF3E0,stroke:#BF360C,color:#333
-    style S7 fill:#E3F2FD,stroke:#1565C0,color:#333</pre>
-                <div class="diagram-placeholder" id="placeholder-6">
-                    <p style="text-align:center;color:#999;padding:40px 0;">Loading diagram...</p>
-                </div>
-            </div>
-            <div class="diagram-actions">
-                <button class="btn" onclick="copyMermaid(6)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Source</button>
-                <button class="btn btn-primary" onclick="openLightbox(6)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Fullscreen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- TAB 7: EVALUATION                                       -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="tab-content" id="tab-7">
-        <div class="card reveal">
-            <div class="card-header">
-                <h2>Evaluation, week 5</h2>
-                <span class="badge b-green"><i></i>Final</span>
-            </div>
-            <div class="diagram-wrapper" data-diagram-idx="7">
-                <pre class="mermaid" style="display:none" data-idx="7">%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#C8E6C9', 'primaryTextColor': '#333', 'primaryBorderColor': '#999', 'lineColor': '#666'}}}%%
-
-flowchart TD
-    classDef green fill:#C8E6C9,stroke:#999,color:#333
-    classDef yellow fill:#FFF9C4,stroke:#999,color:#333
-    classDef pink fill:#FFCDD2,stroke:#999,color:#333
-    classDef terminal fill:#B0BEC5,stroke:#546E7A,color:#333
-    classDef eval fill:#DCEDC8,stroke:#558B2F,stroke-width:2px,color:#333
-
-    START(["Week 5 — Evaluation"]):::terminal
-
-    subgraph PREP["PREPARE IC MATERIALS"]
-        direction TB
-        PR1["Package portfolio\nsummary document"]:::green
-        PR2["Compile all IC memos\ninto presentation format"]:::green
-        PR3["Prepare knowledge graph\nfor live querying"]:::green
-        PR4["Generate portfolio\nanalytics deck\n(factors, risk, attribution)"]:::green
-        PR1 & PR2 & PR3 & PR4 --> READY
-        READY["IC materials ready"]:::yellow
-    end
-
-    subgraph IC["MOCK IC PRESENTATION"]
-        direction TB
-        IC1["2-3 reviewers with\ninvestment experience"]:::pink
-        IC2["Present portfolio\nconstruction rationale"]:::pink
-        IC3["Grill individual\nposition theses"]:::pink
-        IC4["Query knowledge graph\nlive during session"]:::yellow
-        IC5["Challenge factor tilts\nand risk parameters"]:::pink
-        IC1 --> IC2 --> IC3 --> IC4 --> IC5
-    end
-
-    subgraph SCORE["EVALUATION CRITERIA"]
-        direction TB
-        E1["Can it survive\nIC scrutiny?"]:::eval
-        E2["Are sources\ntraceable?"]:::eval
-        E3["Is the thesis\nfalsifiable?"]:::eval
-        E4["Kill criteria:\nclear and testable?"]:::eval
-        E5["What's missing vs\nhuman analyst output?"]:::eval
-        E6["Did the knowledge graph\nanswer follow-ups?"]:::eval
-    end
-
-    START --> PREP --> IC --> SCORE
-
-    VERDICT(["Pilot verdict:\nProof of concept\nvalidated or not"]):::terminal
-    SCORE --> VERDICT
-
-    style PREP fill:#E8F5E9,stroke:#2E7D32,color:#333
-    style IC fill:#FCE4EC,stroke:#C62828,color:#333
-    style SCORE fill:#F1F8E9,stroke:#558B2F,color:#333</pre>
-                <div class="diagram-placeholder" id="placeholder-7">
-                    <p style="text-align:center;color:#999;padding:40px 0;">Loading diagram...</p>
-                </div>
-            </div>
-            <div class="diagram-actions">
-                <button class="btn" onclick="copyMermaid(7)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Source</button>
-                <button class="btn btn-primary" onclick="openLightbox(7)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Fullscreen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- TAB 8: SUMMARY                                          -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="tab-content" id="tab-8">
-        <div class="summary-grid">
-            <div class="summary-card reveal">
-                <h3>Timeline by Week</h3>
-                <div class="bar-chart">
-                    <div class="bar-row">
-                        <span class="bar-label">Wk 1: Foundation</span>
-                        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#C9D5E3;">Mandate + Pipeline + Universe</div></div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">Wk 2: Screen</span>
-                        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#D3DDE8;">Stages 1-2: Filter + Research</div></div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">Wk 3: Thesis</span>
-                        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#DDE5EE;">Stages 3-4: Debate + Memos</div></div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">Wk 4: Build</span>
-                        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#E6ECF3;">Gate 1 + Stage 5: Construct</div></div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">Wk 5: Eval</span>
-                        <div class="bar-track"><div class="bar-fill" style="width:60%;background:#EFF3F8;">Mock IC + Scoring</div></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="summary-card reveal">
-                <h3>Model involvement by Stage</h3>
-                <div class="bar-chart">
-                    <div class="bar-row">
-                        <span class="bar-label">S1: Screening</span>
-                        <div class="bar-track">
-                            <div class="pipeline-bar" style="width:100%">
-                                <div class="seg" style="width:90%;background:#C8E6C9;">90%</div>
-                                <div class="seg" style="width:10%;background:#FFF9C4;">10%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">S2: Research</span>
-                        <div class="bar-track">
-                            <div class="pipeline-bar" style="width:100%">
-                                <div class="seg" style="width:95%;background:#C8E6C9;">95%</div>
-                                <div class="seg" style="width:5%;background:#FFF9C4;">5%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">S3: Debate</span>
-                        <div class="bar-track">
-                            <div class="pipeline-bar" style="width:100%">
-                                <div class="seg" style="width:60%;background:#C8E6C9;">60%</div>
-                                <div class="seg" style="width:20%;background:#FFF9C4;">20%</div>
-                                <div class="seg" style="width:20%;background:#FFCDD2;">20%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">S4: Thesis</span>
-                        <div class="bar-track">
-                            <div class="pipeline-bar" style="width:100%">
-                                <div class="seg" style="width:70%;background:#C8E6C9;">70%</div>
-                                <div class="seg" style="width:30%;background:#FFF9C4;">30%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">Gate 1</span>
-                        <div class="bar-track">
-                            <div class="pipeline-bar" style="width:100%">
-                                <div class="seg" style="width:40%;background:#C8E6C9;">40%</div>
-                                <div class="seg" style="width:60%;background:#E1BEE7;">60%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">S5: Construct</span>
-                        <div class="bar-track">
-                            <div class="pipeline-bar" style="width:100%">
-                                <div class="seg" style="width:85%;background:#C8E6C9;">85%</div>
-                                <div class="seg" style="width:15%;background:#FFF9C4;">15%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">S6: Monitor</span>
-                        <div class="bar-track">
-                            <div class="pipeline-bar" style="width:100%">
-                                <div class="seg" style="width:80%;background:#C8E6C9;">80%</div>
-                                <div class="seg" style="width:20%;background:#FFF9C4;">20%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bar-row">
-                        <span class="bar-label">Evaluation</span>
-                        <div class="bar-track">
-                            <div class="pipeline-bar" style="width:100%">
-                                <div class="seg" style="width:10%;background:#C8E6C9;">10%</div>
-                                <div class="seg" style="width:90%;background:#FFCDD2;">90%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="summary-card reveal">
-                <h3>Infrastructure Required</h3>
-                <table class="detail-table">
-                    <thead><tr><th>Component</th><th>Purpose</th><th>Tech</th></tr></thead>
-                    <tbody>
-                        <tr><td>Document Ingestion</td><td>SEC filings + transcripts to chunks</td><td>Python, EDGAR API</td></tr>
-                        <tr><td>Knowledge Graph</td><td>Queryable, sourced, cross-referenced</td><td>Vector DB + LLM</td></tr>
-                        <tr><td>Prompt Chain</td><td>Structured I/O per stage</td><td>LLM orchestration</td></tr>
-                        <tr><td>Portfolio Optimizer</td><td>Factor constraints, weight bounds</td><td>Python, scipy</td></tr>
-                        <tr><td>Output Templates</td><td>IC memo, portfolio summary, watchlist</td><td>Markdown / PDF</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="summary-card reveal">
-                <h3>LLM Value Demonstrated</h3>
-                <table class="detail-table">
-                    <thead><tr><th>Capability</th><th>Stage</th><th>What It Proves</th></tr></thead>
-                    <tbody>
-                        <tr><td>Living Knowledge Graph</td><td>Stage 2</td><td>Institutional memory that never leaves</td></tr>
-                        <tr><td>Thesis Architect</td><td>Stage 4</td><td>Blank page to red pen</td></tr>
-                        <tr><td>Pre-IC Stress Test</td><td>Gate 1</td><td>Every thesis gets the toughest review</td></tr>
-                        <tr><td>Assumption Watchdog</td><td>Stage 6</td><td>Drift caught real-time, not quarterly</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="summary-card reveal">
-                <h3>Pilot Success Criteria</h3>
-                <table class="detail-table">
-                    <thead><tr><th>Criterion</th><th>Measured By</th></tr></thead>
-                    <tbody>
-                        <tr><td>Survives IC scrutiny</td><td>Mock IC reviewers can't trivially break the thesis</td></tr>
-                        <tr><td>Sources are traceable</td><td>Every claim in the memo links to a source document</td></tr>
-                        <tr><td>Thesis is falsifiable</td><td>Kill criteria are clear, testable, and pre-committed</td></tr>
-                        <tr><td>Knowledge graph works</td><td>Ad-hoc questions answered with sourced responses</td></tr>
-                        <tr><td>Analyst-quality output</td><td>Memo quality rated "junior analyst draft" or better</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="summary-card reveal">
-                <h3>Pilot Scope (US Value Strategy)</h3>
-                <table class="detail-table">
-                    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
-                    <tbody>
-                        <tr><td>Strategy</td><td>US Value Investing</td></tr>
-                        <tr><td>Universe</td><td>Russell 3000 (US equities)</td></tr>
-                        <tr><td>Cap range</td><td>Micro-cap through Large-cap</td></tr>
-                        <tr><td>Vehicles</td><td>SMAs (small), ETFs (large)</td></tr>
-                        <tr><td>Benchmark</td><td>Russell 1000 Value +200bps</td></tr>
-                        <tr><td>Factor targets</td><td>β_HML ≥ 0.40, β_SMB ≥ 0.25</td></tr>
-                        <tr><td>Max position</td><td>5% single name</td></tr>
-                        <tr><td>Data</td><td>Public only (SEC, transcripts)</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Legend -->
-        <div class="legend-section">
-            <div class="card reveal">
-                <div class="card-header"><h2>Color Legend</h2></div>
-                <div class="legend-grid">
-                    <div class="legend-card">
-                        <h4>Model involvement</h4>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#C8E6C9"></div><span class="lg-t"><b>Fully LLM-Driven</b><span>No human input needed</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#FFF9C4"></div><span class="lg-t"><b>Hybrid</b><span>LLM produces, human validates</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#FFCDD2"></div><span class="lg-t"><b>Human-Only</b><span>Judgment calls, live review</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#E1BEE7"></div><span class="lg-t"><b>Decision Gate</b><span>Human approve / reject / refine</span></span></div>
-                    </div>
-                    <div class="legend-card">
-                        <h4>Stage Groups</h4>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#E8EAF6"></div><span class="lg-t"><b>Foundation</b><span>Mandate, universe, pipeline setup</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#E3F2FD"></div><span class="lg-t"><b>Research</b><span>Screening and aggregation</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#FFF3E0"></div><span class="lg-t"><b>Thesis</b><span>Debate and memo development</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#F3E5F5"></div><span class="lg-t"><b>Decision</b><span>Gates and portfolio construction</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#E8F5E9"></div><span class="lg-t"><b>Evaluation</b><span>Mock IC and scoring</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#ECEFF1"></div><span class="lg-t"><b>Optional</b><span>Time simulation (monitoring)</span></span></div>
-                    </div>
-                    <div class="legend-card">
-                        <h4>Special Nodes</h4>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#B0BEC5"></div><span class="lg-t"><b>Terminal</b><span>Start / end points</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#BBDEFB;border-color:#1565C0"></div><span class="lg-t"><b>Deliverable</b><span>Portfolio + IC Memo</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#B3E5FC;border-color:#0277BD"></div><span class="lg-t"><b>Knowledge Graph</b><span>Queryable store</span></span></div>
-                        <div class="legend-item"><div class="legend-swatch" style="background:#FFCCBC;border-color:#BF360C"></div><span class="lg-t"><b>Watchdog Alert</b><span>Drift detection</span></span></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- LIGHTBOX                                                -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="lightbox" id="lightbox">
-        <div class="lightbox-controls">
-            <button onclick="zoomLightbox(0.2)" title="Zoom in">+</button>
-            <button onclick="zoomLightbox(-0.2)" title="Zoom out">&minus;</button>
-            <button onclick="resetZoom()" title="Reset zoom">1:1</button>
-            <button onclick="closeLightbox()" title="Close">&times;</button>
-        </div>
-        <div class="lightbox-canvas" id="lightbox-canvas"></div>
-        <div class="lightbox-zoom-info" id="zoom-info">100%</div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- FOOTER                                                  -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <footer class="footer"><div class="in">
-        <span>Portfolio Management RMS Pilot Workflow · 7 Stages, 2 Human Gates, 1 Constructed Portfolio</span>
-        <span>Built at SpaceXAI and shared with permission. A general method with no client data.</span>
-    </div></footer>
-
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- SCRIPT                                                  -->
-    <!-- ═══════════════════════════════════════════════════════ -->
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-
-        mermaid.initialize({
-            startOnLoad: false,
-            theme: 'base',
-            flowchart: { useMaxWidth: false, defaultRenderer: 'elk' },
-            themeVariables: {
-                primaryColor: '#C8E6C9',
-                primaryTextColor: '#333',
-                primaryBorderColor: '#999',
-                lineColor: '#666',
-                fontFamily: 'Inter, system-ui, sans-serif',
-            }
-        });
-
-        const rendered = new Set();
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        // Store mermaid sources for copy
-        const mmdSources = {};
-        document.querySelectorAll('pre.mermaid[data-idx]').forEach(pre => {
-            mmdSources[pre.dataset.idx] = pre.textContent;
-        });
-
-        function fitDiagram(idx) {
-            const wrapper = document.querySelector(`[data-diagram-idx="${idx}"]`);
-            if (!wrapper) return;
-            const svg = wrapper.querySelector('svg');
-            if (!svg) return;
-            svg.style.transform = '';
-            wrapper.style.height = '';
-            wrapper.classList.remove('fitted');
-            const svgW = svg.getBoundingClientRect().width;
-            const containerW = wrapper.clientWidth - 32;
-            if (svgW > 0 && containerW > 0 && svgW > containerW) {
-                const ratio = Math.max(0.3, containerW / svgW);
-                svg.style.transform = `scale(${ratio})`;
-                const svgH = svg.getBoundingClientRect().height / ratio;
-                wrapper.style.height = (svgH * ratio + 32) + 'px';
-                wrapper.classList.add('fitted');
-            }
-        }
-
-        // Phones: pan each diagram box so its START node is in view
-        function showStart(idx) {
-            if (!window.matchMedia('(max-width: 768px)').matches) return;
-            const w = document.querySelector(`[data-diagram-idx="${idx}"]`);
-            const n = w?.querySelector('g.node[id*="flowchart-START-"]');
-            if (!n) return;
-            const r = n.getBoundingClientRect(), c = w.getBoundingClientRect();
-            w.scrollLeft += (r.left + r.width / 2) - (c.left + c.width / 2);
-        }
-
-        async function renderDiagram(idx) {
-            if (rendered.has(idx)) return;
-            rendered.add(idx);
-            const pre = document.querySelector(`pre.mermaid[data-idx="${idx}"]`);
-            const placeholder = document.getElementById(`placeholder-${idx}`);
-            if (!pre) return;
-            try {
-                const { svg } = await mermaid.render(`mermaid-${idx}`, pre.textContent);
-                if (placeholder) placeholder.innerHTML = svg;
-                requestAnimationFrame(() => { fitDiagram(idx); showStart(idx); });
-            } catch (e) {
-                if (placeholder) {
-                    placeholder.innerHTML = '<p style="color:#c00;padding:20px;">Diagram rendering failed. Try refreshing.</p>';
-                }
-                console.error('Mermaid render error for tab', idx, e);
-            }
-        }
-
-        window.addEventListener('resize', () => {
-            rendered.forEach(idx => fitDiagram(idx));
-        });
-
-        function switchTab(tabId) {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
-            document.querySelector(`[data-tab="${tabId}"]`)?.classList.add('active');
-            const content = document.getElementById(tabId);
-            if (content) {
-                content.classList.add('active');
-                const idx = parseInt(tabId.split('-')[1]);
-                if (!isNaN(idx) && idx < 8) {
-                    renderDiagram(idx);
-                }
-                content.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
-            }
-        }
-
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-        });
-
-        // Render first tab
-        (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => renderDiagram(0));
-        document.querySelectorAll('#tab-0 .reveal').forEach(el => el.classList.add('visible'));
-
-        // Copy
-        window.copyMermaid = function(idx) {
-            const source = mmdSources[idx];
-            if (!source) return;
-            navigator.clipboard.writeText(source).then(() => {
-                const btn = event.currentTarget;
-                const orig = btn.innerHTML;
-                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
-                setTimeout(() => btn.innerHTML = orig, 2000);
-            });
-        };
-
-        // Lightbox
-        let currentZoom = 1;
-        const lightbox = document.getElementById('lightbox');
-        const canvas = document.getElementById('lightbox-canvas');
-        const zoomInfo = document.getElementById('zoom-info');
-
-        window.openLightbox = function(idx) {
-            const wrapper = document.querySelector(`[data-diagram-idx="${idx}"]`);
-            const svg = wrapper?.querySelector('svg');
-            if (!svg) return;
-            const clone = svg.cloneNode(true);
-            clone.style.transform = '';
-            clone.style.background = '#fff';
-            clone.style.borderRadius = '8px';
-            clone.style.padding = '16px';
-            canvas.innerHTML = '';
-            canvas.appendChild(clone);
-            currentZoom = 1;
-            updateZoom();
-            lightbox.classList.add('open');
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closeLightbox = function() {
-            lightbox.classList.remove('open');
-            document.body.style.overflow = '';
-            canvas.innerHTML = '';
-        };
-
-        window.zoomLightbox = function(delta) {
-            currentZoom = Math.max(0.5, Math.min(3, currentZoom + delta));
-            updateZoom();
-        };
-
-        window.resetZoom = function() {
-            currentZoom = 1;
-            updateZoom();
-        };
-
-        function updateZoom() {
-            const svg = canvas.querySelector('svg');
-            if (svg) {
-                svg.style.transform = `scale(${currentZoom})`;
-                svg.style.transformOrigin = 'top left';
-            }
-            zoomInfo.textContent = Math.round(currentZoom * 100) + '%';
-        }
-
-        canvas.addEventListener('wheel', (e) => {
-            if (!lightbox.classList.contains('open')) return;
-            e.preventDefault();
-            const delta = e.deltaY > 0 ? -0.1 : 0.1;
-            currentZoom = Math.max(0.5, Math.min(3, currentZoom + delta));
-            updateZoom();
-        }, { passive: false });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeLightbox();
-        });
-
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox) closeLightbox();
-        });
-
-        // Scroll reveal
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) entry.target.classList.add('visible');
-            });
-        }, { threshold: 0.1 });
-
-        document.querySelectorAll('.legend-section .reveal, .summary-card.reveal').forEach(el => observer.observe(el));
-    </script>
-</body>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Value Portfolio Pilot</title>
+<meta name="description" content="A five-week pilot design for a model-assisted US equity value portfolio, with pass rules, baselines and checks for invented facts and look-ahead bias.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root { --bg:#F7F5F0; --paper:#FFFFFF; --ink:#13202F; --muted:#5D6B7A; --faint:#8A95A3; --rule:#E6E1D8; --accent:#1F3A5F; --gold:#A8874F;
+  --serif:"Fraunces", Georgia, serif; --sans:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif; --mono:"JetBrains Mono", ui-monospace, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0F151C; --paper:#151D26; --ink:#E8E4DC; --muted:#A3ADB8; --faint:#7D8894; --rule:#26313C; --accent:#9DB8DA; --gold:#C9A86E; } }
+:root[data-theme="dark"] { --bg:#0F151C; --paper:#151D26; --ink:#E8E4DC; --muted:#A3ADB8; --faint:#7D8894; --rule:#26313C; --accent:#9DB8DA; --gold:#C9A86E; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; scroll-padding-top:24px; }
+body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+.top { border-bottom:1px solid var(--rule); background:var(--paper); }
+.top .in { max-width:1320px; margin:0 auto; padding:12px 16px; display:flex; flex-wrap:wrap; gap:6px 18px; justify-content:space-between; font-size:13px; color:var(--muted); }
+.top b { color:var(--ink); font-weight:600; letter-spacing:.2px; }
+.shell { max-width:1320px; margin:0 auto; padding:0 16px; display:grid; grid-template-columns:220px minmax(0,1fr); gap:48px; }
+aside.toc { position:sticky; top:0; align-self:start; max-height:100vh; overflow:auto; padding:40px 0 24px; font-size:13px; }
+aside.toc .lbl { font-size:11px; letter-spacing:1.4px; text-transform:uppercase; color:var(--faint); margin:16px 0 6px; }
+aside.toc a { display:flex; gap:10px; padding:4px 10px; margin-left:-10px; border-left:2px solid transparent; color:var(--muted); line-height:1.35; }
+aside.toc a span.n { font-family:var(--mono); font-size:11px; color:var(--faint); min-width:18px; padding-top:1px; }
+aside.toc a.on { color:var(--ink); border-left-color:var(--gold); background:color-mix(in srgb, var(--gold) 8%, transparent); }
+aside.toc a:hover { text-decoration:none; color:var(--ink); }
+main { padding:48px 0 80px; min-width:0; }
+.eyebrow { font-size:12px; letter-spacing:1.6px; text-transform:uppercase; color:var(--gold); font-weight:600; }
+h1 { font-family:var(--serif); font-weight:500; font-size:clamp(34px,5vw,54px); line-height:1.05; letter-spacing:-.6px; margin:12px 0 14px; }
+.subtitle { font-family:var(--serif); font-size:clamp(18px,2.2vw,22px); line-height:1.4; color:var(--muted); max-width:760px; margin:0 0 18px; font-weight:400; }
+.meta { font-size:13px; color:var(--faint); display:flex; flex-wrap:wrap; gap:4px 16px; margin-bottom:28px; }
+.lede { max-width:760px; font-size:16px; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); margin:32px 0; }
+.stat { padding:18px 16px 16px 0; }
+.stat b { display:block; font-family:var(--serif); font-weight:500; font-size:40px; line-height:1; letter-spacing:-.5px; }
+.stat span { display:block; margin-top:8px; font-size:12.5px; color:var(--muted); }
+.panel { background:var(--paper); border:1px solid var(--rule); border-radius:14px; padding:24px; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:28px; }
+.panel h3 { font-family:var(--serif); font-weight:500; font-size:22px; margin:0 0 8px; }
+.panel p { margin:0; color:var(--muted); }
+.legend { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.legend li { display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center; font-size:13.5px; color:var(--muted); }
+.legend li b { font-family:var(--serif); font-size:20px; font-weight:500; color:var(--ink); }
+.chip { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; letter-spacing:.2px; padding:3px 9px; border-radius:999px; white-space:nowrap; border:1px solid transparent; }
+.chip i { width:7px; height:7px; border-radius:50%; display:inline-block; }
+section.block { margin-top:72px; }
+h2.sec { font-family:var(--serif); font-weight:500; font-size:30px; letter-spacing:-.3px; margin:6px 0 10px; line-height:1.15; }
+.secnote { color:var(--muted); max-width:760px; margin:0 0 22px; }
+.cycle { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:0; border-top:2px solid var(--rule); }
+.cycle .st { padding:16px 14px 6px 0; position:relative; }
+.cycle .st::before { content:""; position:absolute; top:-7px; left:0; width:12px; height:12px; border-radius:50%; background:var(--bg); border:2px solid var(--faint); }
+.cycle .st.here::before { background:var(--gold); border-color:var(--gold); }
+.cycle .st.here { }
+.cycle .k { font-family:var(--mono); font-size:11px; color:var(--faint); }
+.cycle .t { font-family:var(--serif); font-size:16.5px; line-height:1.25; margin:4px 0 6px; }
+.cycle .m { font-size:12.5px; color:var(--muted); }
+.cycle .st.here .t { color:var(--accent); }
+.cycle .tag { display:inline-block; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--gold); font-weight:600; margin-top:6px; }
+.rail { display:grid; gap:14px; }
+.grp { display:grid; grid-template-columns:180px minmax(0,1fr); gap:18px; align-items:start; padding:14px 0; border-top:1px solid var(--rule); }
+.grp .gh { font-size:12px; letter-spacing:1.2px; text-transform:uppercase; color:var(--faint); font-weight:600; padding-top:10px; }
+.cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; }
+a.card { display:block; background:var(--paper); border:1px solid var(--rule); border-radius:12px; padding:12px 14px; color:var(--ink); transition:border-color .15s, transform .15s; }
+a.card:hover { border-color:var(--gold); text-decoration:none; transform:translateY(-1px); }
+a.card .k { font-family:var(--mono); font-size:11px; color:var(--gold); }
+a.card .t { font-family:var(--serif); font-size:16px; line-height:1.25; margin:3px 0 6px; }
+a.card .c { font-size:12px; color:var(--faint); }
+a.card.sub { background:transparent; border-style:dashed; }
+section.phase { margin-top:84px; }
+.ph-head { display:flex; gap:18px; align-items:flex-start; }
+.badge { flex:none; width:52px; height:52px; border-radius:50%; border:1px solid var(--gold); color:var(--gold); display:grid; place-items:center; font-family:var(--serif); font-size:22px; }
+.badge.sub { border-style:dashed; font-size:14px; font-family:var(--sans); font-weight:600; }
+.ph-head .kick { font-size:12px; letter-spacing:1.4px; text-transform:uppercase; color:var(--faint); font-weight:600; }
+.ph-head h2 { font-family:var(--serif); font-weight:500; font-size:clamp(24px,3vw,32px); line-height:1.12; letter-spacing:-.3px; margin:2px 0 0; }
+.authority { margin:20px 0 6px; padding:14px 18px; border-left:3px solid var(--gold); background:var(--paper); border-radius:0 10px 10px 0; font-size:14.5px; }
+.authority .l { font-size:11px; letter-spacing:1.3px; text-transform:uppercase; color:var(--gold); font-weight:600; display:block; margin-bottom:2px; }
+.anchors { font-size:12.5px; color:var(--faint); margin:8px 0 22px; }
+.anchors b { color:var(--muted); font-weight:600; }
+.ph-body { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start; }
+figure.diagram { margin:0; background:#FFFFFF; border:1px solid var(--rule); border-radius:14px; padding:18px 10px; position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto; }
+figure.diagram .mermaid { display:flex; justify-content:center; }
+figure.diagram svg { max-width:100%; height:auto; }
+ol.tasks { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+ol.tasks li { background:var(--paper); border:1px solid var(--rule); border-radius:12px; padding:14px 16px; }
+ol.tasks .row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin-bottom:6px; }
+ol.tasks .id { font-family:var(--mono); font-size:12px; color:var(--muted); }
+ol.tasks .own { font-size:12px; color:var(--muted); margin-left:auto; }
+ol.tasks .own::before { content:"Owner  "; color:var(--faint); }
+ol.tasks h4 { margin:0 0 4px; font-size:15px; font-weight:600; line-height:1.35; }
+ol.tasks p { margin:0; font-size:14px; color:var(--muted); }
+ol.tasks .ref { margin-top:8px; font-size:12px; color:var(--faint); }
+ol.tasks .ref.bp { color:var(--gold); }
+ol.qs { counter-reset:q; } ol.qs li { counter-increment:q; } ol.qs h4::before { content:counter(q) ". "; color:var(--gold); font-family:var(--serif); }
+footer { margin-top:96px; padding-top:20px; border-top:1px solid var(--rule); color:var(--faint); font-size:13px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; }
+@media (max-width:1100px) { .ph-body { grid-template-columns:1fr; } figure.diagram { position:static; max-height:none; } }
+@media (max-width:900px) { .shell { grid-template-columns:1fr; gap:0; } aside.toc { display:none; } .panel { grid-template-columns:1fr; } .cycle { grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:18px; } .grp { grid-template-columns:1fr; gap:8px; } }
+@media print { aside.toc, .top { display:none; } .shell { display:block; } figure.diagram { position:static; max-height:none; } section.phase { break-before:page; } }
+
+.cycle .st.opt::before { border-style:dashed; }
+.cycle .st.opt .t { color:var(--muted); }
+dl.kv { display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px 12px; margin:8px 0 0; font-size:13px; }
+dl.kv dt { color:var(--faint); font-weight:600; }
+dl.kv dd { margin:0; color:var(--muted); }
+a.card .ids { font-family:var(--mono); font-size:11px; color:var(--accent); margin-top:6px; display:block; }
+ol.tasks.checks li h4 { font-size:14.5px; }
+.cycle .tag { text-transform:none; letter-spacing:0; font-size:12px; font-weight:500; }
+</style></head><body>
+<div class="top"><div class="in"><span><b>mindtensorML</b> · Process maps for AI in investment work</span><span>By Caesar Rana, CFA, APMG CP3P · <a href="https://mindtensorml.github.io/">All maps</a></span></div></div>
+<div class="shell">
+<aside class="toc" aria-label="Contents"><div class="lbl">Overview</div><a href="#top"><span class="n">·</span>Introduction</a><a href="#cycle"><span class="n">·</span>The five weeks</a><a href="#map"><span class="n">·</span>The map at a glance</a><a href="#adds"><span class="n">·</span>Where a model adds most</a><a href="#judged"><span class="n">·</span>How the pilot is judged</a><a href="#checks"><span class="n">·</span>Checks on model output</a><div class="lbl">Phases</div><a href="#MD"><span class="n">01</span>Mandate and Evaluation Design</a><a href="#DA"><span class="n">02</span>Universe and Dated Data</a><a href="#SC"><span class="n">03</span>Screening and Watchlist</a><a href="#RS"><span class="n">04</span>Research Dossiers and Sourced Library</a><a href="#DB"><span class="n">05</span>Bull and Bear Debate</a><a href="#TH"><span class="n">06</span>Thesis Memos</a><a href="#EG"><span class="n">07</span>Gate 1. Pre-IC Challenge and Entry Decision</a><a href="#PC"><span class="n">08</span>Portfolio Construction</a><a href="#MN"><span class="n">09</span>Replay of Monitoring and Rebalancing</a><a href="#EV"><span class="n">10</span>Evaluation and Mock Investment Committee</a><div class="lbl">Review</div><a href="#questions"><span class="n">·</span>Open questions</a></aside>
+<main>
+<div id="top" class="eyebrow">US equities · Value · Pilot design · v2, October 2026</div>
+<h1>AI-Assisted Value Portfolio Pilot</h1>
+<p class="subtitle">A five-week test of where a frontier model helps a value team, and of how the team will know.</p>
+<div class="meta"><span>v2, October 2026</span><span>Mapped against the CFA Institute Code and Standards (2024) and NIST AI RMF 1.0 with its Generative AI Profile</span><span>A general method with no client data</span></div>
+<p class="lede">The pilot builds a value sleeve for a hypothetical endowment from public data only. It runs from mandate to a mock investment committee. A pilot is only worth running if it can fail, so the measures, baselines and pass rules are fixed in week 1, before any model output exists. Model drafts are checked against their sources and against dates the market could actually see. Entry decisions, the portfolio sign-off and the committee decision stay with people. The color tags are design estimates of what a model could do with the owner accountable, not measured results. Measuring them is the point of the pilot.</p>
+<div class="stats">
+ <div class="stat"><b>5</b><span>Weeks, plus an optional replay</span></div>
+ <div class="stat"><b>7</b><span>Stages, two of them in the optional replay</span></div>
+ <div class="stat"><b>86</b><span>Steps</span></div>
+ <div class="stat"><b>7</b><span>Decision gates</span></div>
+ <div class="stat"><b>8</b><span>Pre-registered measures</span></div>
+</div>
+<div class="panel"><div><h3>Who decides</h3><p>Every step has an owner, and 9 roles cover them all. The pilot lead decides whether the model passed its test before research starts. The PM makes every entry, exit and weighting decision and signs every memo. The mock IC chair records the committee's decision, and the CIO gives the pilot's verdict against rules set in week 1. A model can run a step or draft it. It never decides. Where no standard speaks to a step, it is marked practitioner practice (18 of 86 steps).</p></div>
+<ul class="legend"><li><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span>Recommendations, sign-offs, gates and judgment on people</span><b>17</b></li><li><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span>A model drafts, the owner reviews and signs</span><b>28</b></li><li><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span>A model executes, the owner is accountable and samples the output</span><b>34</b></li><li><span class="chip" style="background:#EBE5F3;color:#4B3576"><i style="background:#4B3576"></i>Decision gate</span><span>A decision with a named owner</span><b>7</b></li></ul></div>
+
+<section class="block" id="cycle"><div class="eyebrow">Context</div><h2 class="sec">The five weeks</h2>
+<p class="secnote">Week 1 sets the rules and the data. Weeks 2 to 4 build the portfolio, and week 5 judges the pilot. The replay of stages 6 and 7 is optional. By default it runs after week 5. It can run alongside weeks 4 and 5 only on a cut-down set with a second analyst.</p>
+<div class="cycle"><div class="st"><div class="k">WEEK 1</div><div class="t">Foundation</div><div class="m">Mandate, pass rules, baseline, universe and dated data</div><span class="tag">A tested model and a written scorecard</span></div><div class="st"><div class="k">WEEK 2</div><div class="t">Screening and research</div><div class="m">Stages 1 and 2, and the baseline memos begin</div><span class="tag">About 30 to 50 names with sourced dossiers</span></div><div class="st"><div class="k">WEEK 3</div><div class="t">Debate and thesis</div><div class="m">Stages 3 and 4, and the baseline memos finish</div><span class="tag">About 20 to 25 signed memos</span></div><div class="st"><div class="k">WEEK 4</div><div class="t">Entry and construction</div><div class="m">Gate 1 and Stage 5</div><span class="tag">A signed model portfolio</span></div><div class="st opt"><div class="k">OPTIONAL</div><div class="t">Replay</div><div class="m">Stages 6 and 7 after week 5, or alongside weeks 4 and 5 on a cut-down set</div><span class="tag">Alerts and a theoretical track</span></div><div class="st"><div class="k">WEEK 5</div><div class="t">Evaluation</div><div class="m">Scoring, mock IC and verdict</div><span class="tag">A scorecard and the CIO&#x27;s verdict</span></div></div></section>
+
+<section class="block" id="map"><div class="eyebrow">Structure</div><h2 class="sec">The map at a glance</h2>
+<p class="secnote">10 phases across 5 weeks. Gate 1 sits between the memos and construction. The replay is dashed because it is optional.</p>
+<div class="rail"><div class="grp"><div class="gh">Week 1</div><div class="cards"><a class="card" href="#MD"><div class="k">Phase 01</div><div class="t">Mandate and Evaluation Design</div><div class="c">7 steps</div></a><a class="card" href="#DA"><div class="k">Phase 02</div><div class="t">Universe and Dated Data</div><div class="c">12 steps</div></a></div></div><div class="grp"><div class="gh">Week 2</div><div class="cards"><a class="card" href="#SC"><div class="k">Stage 1</div><div class="t">Screening and Watchlist</div><div class="c">4 steps</div></a><a class="card" href="#RS"><div class="k">Stage 2</div><div class="t">Research Dossiers and Sourced Library</div><div class="c">8 steps</div></a></div></div><div class="grp"><div class="gh">Week 3</div><div class="cards"><a class="card" href="#DB"><div class="k">Stage 3</div><div class="t">Bull and Bear Debate</div><div class="c">6 steps</div></a><a class="card" href="#TH"><div class="k">Stage 4</div><div class="t">Thesis Memos</div><div class="c">7 steps</div></a></div></div><div class="grp"><div class="gh">Week 4</div><div class="cards"><a class="card" href="#EG"><div class="k">Phase 07</div><div class="t">Gate 1. Pre-IC Challenge and Entry Decision</div><div class="c">5 steps</div></a><a class="card" href="#PC"><div class="k">Stage 5</div><div class="t">Portfolio Construction</div><div class="c">11 steps</div></a></div></div><div class="grp"><div class="gh">Optional</div><div class="cards"><a class="card sub" href="#MN"><div class="k">Stages 6 and 7</div><div class="t">Replay of Monitoring and Rebalancing</div><div class="c">11 steps</div></a></div></div><div class="grp"><div class="gh">Week 5</div><div class="cards"><a class="card" href="#EV"><div class="k">Phase 10</div><div class="t">Evaluation and Mock Investment Committee</div><div class="c">15 steps</div></a></div></div></div></section>
+
+<section class="block" id="adds"><div class="eyebrow">Claims to test</div><h2 class="sec">Where a model adds most</h2>
+<p class="secnote">These are the four places the design expects the largest gain. Each points to the steps where it happens and the measure that will confirm or reject it. None is a result yet.</p>
+<div class="cards"><a class="card" href="#RS-07"><div class="k">Where a model adds</div><div class="t">Sourced research library</div><div class="c">Answers questions across every filing and call, each with a citation.</div><div class="c" style="margin-top:6px">Tested by gold-set accuracy and the citation check.</div><span class="ids">RS-07 · EV-11</span></a><a class="card" href="#TH-01"><div class="k">Where a model adds</div><div class="t">First-draft memos</div><div class="c">Turns a dossier into a full draft the PM edits.</div><div class="c" style="margin-top:6px">Tested by blind quality score and hours to a signed memo.</div><span class="ids">TH-01 · TH-06</span></a><a class="card" href="#EG-01"><div class="k">Where a model adds</div><div class="t">Pre-IC challenge</div><div class="c">Gives every name a hard challenge before Gate 1.</div><div class="c" style="margin-top:6px">Tested by share of mock IC questions the challenge report already raised.</div><span class="ids">EG-01 · EG-02 · EG-03</span></a><a class="card" href="#MN-04"><div class="k">Where a model adds</div><div class="t">Assumption tracking</div><div class="c">Checks each new filing against the memo&#x27;s assumptions and kill criteria.</div><div class="c" style="margin-top:6px">Tested by alert timing in the replay. This one is tested only if the replay runs.</div><span class="ids">MN-04 · MN-05</span></a></div></section>
+
+<section class="block" id="judged"><div class="eyebrow">Evaluation design</div><h2 class="sec">How the pilot is judged</h2>
+<p class="secnote">The CIO fixes these in MD-05, before week 2. The pass rules shown are proposals for the CIO to confirm or change. Any later change goes in the decision log with a reason. Hit rate is reported but cannot carry the verdict, because about 20 names over a few months cannot show skill.</p>
+<ol class="tasks"><li><h4>Thesis quality</h4><p>Blind score from one to five on six criteria. Variant view, valuation support, dated catalysts, testable kill criteria, traceable sources, fact kept apart from opinion.</p><dl class="kv"><dt>Baseline</dt><dd>Analyst-only memos on the same three to five names</dd><dt>Pass rule</dt><dd>On the paired names, model-assisted memos average no lower than the analyst-only memos, and no criterion averages below three</dd></dl><div class="ref">CFA Code V(A), V(B); Practitioner practice</div></li><li><h4>Source accuracy</h4><p>Share of sampled claims the cited passage supports. All valuation figures plus 20 other claims per memo.</p><dl class="kv"><dt>Baseline</dt><dd>Error rate in the analyst-only memos</dd><dt>Pass rule</dt><dd>No unsupported figure in any signed memo</dd></dl><div class="ref">NIST AI 600-1 MS-2.5-003</div></li><li><h4>Library accuracy</h4><p>Correct and correctly cited answers on the gold question set, with the held-back half scored apart.</p><dl class="kv"><dt>Baseline</dt><dd>The same set run in week 1</dd><dt>Pass rule</dt><dd>At or above the MD-05 threshold and the week 1 score on the held-back half, and no invented citations</dd></dl><div class="ref">NIST AI 600-1 MP-2.3-001</div></li><li><h4>Review vigilance</h4><p>Share of seeded errors the reviewer catches before signing.</p><dl class="kv"><dt>Baseline</dt><dd>None. This is an absolute check</dd><dt>Pass rule</dt><dd>All seeded errors in valuation figures are caught</dd></dl><div class="ref">NIST AI 600-1 s2.7</div></li><li><h4>Time saved</h4><p>Logged hours from watchlist name to signed memo, including review and correction.</p><dl class="kv"><dt>Baseline</dt><dd>Analyst-only hours on the same names</dd><dt>Pass rule</dt><dd>A saving the CIO names in week 1, with quality no worse</dd></dl><div class="ref">Practitioner practice</div></li><li><h4>Hit rate</h4><p>Share of positions whose dated catalyst or KPI moved the way the thesis said, and share beating the benchmark. Week 5 comes days after sign-off, so this needs the replay or a later review.</p><dl class="kv"><dt>Baseline</dt><dd>The benchmark and the plain value screen portfolio</dd><dt>Pass rule</dt><dd>Descriptive only. About 20 names over months cannot show skill</dd></dl><div class="ref">Practitioner practice</div></li><li><h4>Portfolio risk</h4><p>Tracking error, factor exposures, largest position, top ten weight, days to trade, stress drawdown.</p><dl class="kv"><dt>Baseline</dt><dd>Mandate limits set in MD-03</dd><dt>Pass rule</dt><dd>Every limit met at sign-off</dd></dl><div class="ref">CFA Code III(C)(2)</div></li><li><h4>Look-ahead</h4><p>Sources dated after the as-of date, and answers that reveal later events.</p><dl class="kv"><dt>Baseline</dt><dd>None. This is an absolute check</dd><dt>Pass rule</dt><dd>Zero dated breaches. Any knowledge leak labels the replay contaminated</dd></dl><div class="ref">Glasserman and Lin 2023</div></li></ol></section>
+
+<section class="block" id="checks"><div class="eyebrow">Controls</div><h2 class="sec">Checks on model output</h2>
+<p class="secnote">Two failures can quietly ruin a pilot like this. A model can state a fact or cite a passage that does not exist. And a replay can use information nobody had on the day. These checks guard against both.</p>
+<ol class="tasks checks"><li><h4>Every claim cites a dated source</h4><p>Uncited claims are struck before review.</p><div class="ref">NIST AI 600-1 MS-2.5-003</div></li><li><h4>Numbers come from code, not prose</h4><p>Ratios, valuations and factor exposures are computed in code the analyst can audit.</p><div class="ref">CFA SoPH V(A) p.131</div></li><li><h4>Dates follow EDGAR acceptance</h4><p>A filing exists for the pilot from the time the SEC accepted it, not from its period end. After the close means the next trading day.</p><div class="ref">Form 10-K and 10-Q General Instructions; SEC Accessing EDGAR Data</div></li><li><h4>Universe as of the date</h4><p>Index membership and delisted names as they stood on the as-of date.</p><div class="ref">Russell v7.2 s4.2.3, s4.3.1</div></li><li><h4>Model cutoff before the replay</h4><p>Web search stays off. If the cutoff falls inside the replay, results are labeled possibly contaminated.</p><div class="ref">Glasserman and Lin 2023</div></li><li><h4>Seeded errors</h4><p>Known mistakes planted in drafts test whether the reviewer reads or rubber-stamps.</p><div class="ref">NIST AI 600-1 s2.7</div></li><li><h4>Everything logged</h4><p>Model version, prompts, inputs, outputs and every edit.</p><div class="ref">CFA SoPH p.153</div></li><li><h4>Replay labeled theoretical</h4><p>Never joined to actual performance.</p><div class="ref">GIPS 2020 1.A.27</div></li></ol></section>
+
+<section class="phase" id="MD"><div class="ph-head"><div class="badge">1</div><div><div class="kick">Week 1</div><h2>Mandate and Evaluation Design</h2></div></div>
+<div class="authority"><span class="l">What good looks like</span>The mandate&#x27;s limits fit together, and the pass rules are written down before any model output exists.</div>
+<div class="anchors"><b>Standards</b> · CFA Code III(C); NIST AI RMF MEASURE 1.1, MANAGE 1.1; NIST AI 600-1 MS-2.3-002</div>
+<div class="ph-body"><figure class="diagram"><pre class="mermaid">flowchart TD
+  classDef llm fill:#E2EFE6,stroke:#9CC3A8,color:#1E3A28,stroke-width:1px
+  classDef hyb fill:#F6EDD6,stroke:#D9C38A,color:#4A3609,stroke-width:1px
+  classDef hum fill:#F6E3DF,stroke:#DDAFA5,color:#5C1F16,stroke-width:1px
+  classDef gate fill:#EBE5F3,stroke:#B7A6D6,color:#33244F,stroke-width:1px
+  classDef ext fill:#FAF8F4,stroke:#BDB6A8,color:#5D6B7A,stroke-dasharray:4 3
+  classDef term fill:#13202F,stroke:#13202F,color:#F7F5F0
+  MD_01[&quot;MD-01: Define the client profile&quot;]:::hum
+  MD_02[&quot;MD-02: Set the benchmark and return target&quot;]:::hum
+  MD_03[&quot;MD-03: Set position limits and the risk budget&quot;]:::hum
+  MD_04[&quot;MD-04: Set factor targets&quot;]:::hum
+  MD_05[&quot;MD-05: Pre-register the measures and pass rules&quot;]:::hum
+  MD_06[&quot;MD-06: Set the baseline&quot;]:::hum
+  MD_07[&quot;MD-07: Confirm data rights and keep out inside information&quot;]:::hyb
+  START([&quot;Start&quot;]):::term
+  START --&gt; MD_01
+  MD_01 --&gt; MD_02
+  MD_02 --&gt; MD_03
+  MD_03 --&gt; MD_04
+  MD_04 --&gt; MD_05
+  MD_05 --&gt; MD_06
+  MD_06 --&gt; MD_07
+  SC[[&quot;Week 2&lt;br/&gt;Stage 1. Screening and&lt;br/&gt;Watchlist&quot;]]:::ext
+  MD_07 --&gt; SC</pre></figure><ol class="tasks"><li id="MD-01"><div class="row"><span class="id">MD-01</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">CIO</span></div><h4>Define the client profile</h4><p>A hypothetical endowment with $500M in assets and a $50M value sleeve. Write down the return objective, risk tolerance, horizon, liquidity needs and any restrictions.</p><div class="ref">CFA Code III(C)(1)(a)</div></li><li id="MD-02"><div class="row"><span class="id">MD-02</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">CIO</span></div><h4>Set the benchmark and return target</h4><p>The v1 target is Russell 1000 Value plus 200 basis points a year. State whether that is gross or net of fees and over what horizon. The universe reaches into small caps, so Russell 3000 Value fits better. If the client keeps Russell 1000 Value, the small-cap tilt is an active bet that needs its own risk budget.</p><div class="ref bp">Russell v7.2 s6.10.1, s8.2.1; Practitioner practice</div></li><li id="MD-03"><div class="row"><span class="id">MD-03</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">CIO</span></div><h4>Set position limits and the risk budget</h4><p>No more than 5 percent in one name. Add a tracking error budget, a drawdown tolerance and a liquidity rule, because Stage 5 tests against them. A 5 percent cap needs at least 20 names to be fully invested. Otherwise the mandate must say where the rest of the money sits.</p><div class="ref">CFA Code III(C)(2); CFA SoPH p.144</div></li><li id="MD-04"><div class="row"><span class="id">MD-04</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">CIO</span></div><h4>Set factor targets</h4><p>Value exposure (HML) of at least 0.40 and size exposure (SMB) of at least 0.25 against the Fama French factors. Name the estimation window. A size tilt against a large-cap benchmark needs the CIO&#x27;s explicit approval.</p><div class="ref">French Library, three and five factor descriptions</div></li><li id="MD-05"><div class="row"><span class="id">MD-05</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">CIO</span></div><h4>Pre-register the measures and pass rules</h4><p>Fix the measures in the scorecard on this page, with a pass rule for each, before week 2. Mark which rules are core, since a missed core rule stops the pilot. Set the gold-set score the model must reach before week 2. Any later change needs the CIO&#x27;s written reason in the decision log.</p><div class="ref">NIST AI RMF MEASURE 1.1, MANAGE 1.1</div></li><li id="MD-06"><div class="row"><span class="id">MD-06</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Pilot lead</span></div><h4>Set the baseline</h4><p>Fixed now and run in weeks 2 and 3, once the watchlist exists. Three to five watchlist names are drawn at random. An analyst who never sees the model&#x27;s work researches them without a model, to the same memo template, and logs hours. The same names also get a model-assisted memo, so the comparison is like for like. Two portfolio baselines sit beside it. One is the benchmark. The other is a plain value screen portfolio.</p><div class="ref bp">NIST AI 600-1 MS-2.3-002; Practitioner practice</div></li><li id="MD-07"><div class="row"><span class="id">MD-07</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Compliance officer</span></div><h4>Confirm data rights and keep out inside information</h4><p>A model drafts the list of every source and its licence terms. Transcripts and news feeds often limit storage and model use. The model provider&#x27;s terms must keep pilot inputs out of its training. Compliance confirms that only public information enters the pilot.</p><div class="ref">CFA AI 2022 Exhibit 4; NIST AI RMF MAP 4.1</div></li></ol></div></section>
+<section class="phase" id="DA"><div class="ph-head"><div class="badge">2</div><div><div class="kick">Week 1</div><h2>Universe and Dated Data</h2></div></div>
+<div class="authority"><span class="l">What good looks like</span>Every document carries the date the market first saw it, and the model passes a test before anyone relies on it.</div>
+<div class="anchors"><b>Standards</b> · Russell v7.2 s4.2.3, s4.3.1, s6.10.1; SEC Forms 10-K, 10-Q and 8-K; SEC Accessing EDGAR Data; CFA SoPH pp.131, 153</div>
+<div class="ph-body"><figure class="diagram"><pre class="mermaid">flowchart TD
+  classDef llm fill:#E2EFE6,stroke:#9CC3A8,color:#1E3A28,stroke-width:1px
+  classDef hyb fill:#F6EDD6,stroke:#D9C38A,color:#4A3609,stroke-width:1px
+  classDef hum fill:#F6E3DF,stroke:#DDAFA5,color:#5C1F16,stroke-width:1px
+  classDef gate fill:#EBE5F3,stroke:#B7A6D6,color:#33244F,stroke-width:1px
+  classDef ext fill:#FAF8F4,stroke:#BDB6A8,color:#5D6B7A,stroke-dasharray:4 3
+  classDef term fill:#13202F,stroke:#13202F,color:#F7F5F0
+  DA_01[&quot;DA-01: Open the decision log&quot;]:::llm
+  DA_02[&quot;DA-02: Start from the Russell 3000 as of the pilot date&quot;]:::llm
+  DA_03[&quot;DA-03: Keep US common stock in the Russell 3000 size range&quot;]:::llm
+  DA_04[&quot;DA-04: Confirm public data for each name&quot;]:::llm
+  DA_05[&quot;DA-05: Load SEC filings from EDGAR&quot;]:::llm
+  DA_06[&quot;DA-06: Load four quarters of earnings call transcripts&quot;]:::llm
+  DA_07[&quot;DA-07: Load prices and financial data&quot;]:::llm
+  DA_08[&quot;DA-08: Load news and material events&quot;]:::llm
+  DA_09[&quot;DA-09: Stamp every document with its as-of date&quot;]:::hyb
+  DA_10[&quot;DA-10: Split and index the documents&quot;]:::hyb
+  DA_11[&quot;DA-11: Test the model on a gold question set&quot;]:::hyb
+  DA_D1{&quot;DA-D1: Fit to use in week 2?&quot;}:::gate
+  START([&quot;Start&quot;]):::term
+  START --&gt; DA_01
+  DA_01 --&gt; DA_02
+  DA_02 --&gt; DA_03
+  DA_03 --&gt; DA_04
+  DA_04 --&gt; DA_05
+  DA_04 --&gt; DA_06
+  DA_04 --&gt; DA_07
+  DA_04 --&gt; DA_08
+  DA_05 --&gt; DA_09
+  DA_06 --&gt; DA_09
+  DA_07 --&gt; DA_09
+  DA_08 --&gt; DA_09
+  DA_09 --&gt; DA_10
+  DA_10 --&gt; DA_11
+  DA_11 --&gt; DA_D1
+  SC[[&quot;Week 2&lt;br/&gt;Stage 1. Screening and&lt;br/&gt;Watchlist&quot;]]:::ext
+  DA_D1 --&gt;|Meets the threshold| SC
+  DA_D1 --&gt;|Below, fix and retest once| DA_10
+  END_STOP([&quot;Stop the pilot&quot;]):::term
+  DA_D1 --&gt;|Below after the retest| END_STOP</pre></figure><ol class="tasks"><li id="DA-01"><div class="row"><span class="id">DA-01</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Pilot lead</span></div><h4>Open the decision log</h4><p>It runs from day one. Record the model version, prompts, inputs and outputs, and every human edit and decision, so any result can be traced and rerun.</p><div class="ref">CFA Code V(C); CFA SoPH p.153</div></li><li id="DA-02"><div class="row"><span class="id">DA-02</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Data engineer</span></div><h4>Start from the Russell 3000 as of the pilot date</h4><p>Use index membership on the pilot&#x27;s as-of date, not today&#x27;s list. Russell reconstitutes in June and December and adds IPOs each quarter.</p><div class="ref">Russell v7.2 s4.2.3, s4.3.1</div></li><li id="DA-03"><div class="row"><span class="id">DA-03</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Data engineer</span></div><h4>Keep US common stock in the Russell 3000 size range</h4><p>The Russell 3000 covers companies ranked 1 to 3,000. It holds only the larger micro-caps, since the Russell Microcap runs from 2,001 to 4,000.</p><div class="ref">Russell v7.2 s6.10.1</div></li><li id="DA-04"><div class="row"><span class="id">DA-04</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Data engineer</span></div><h4>Confirm public data for each name</h4><p>Drop names that lack the filings or prices the screens need, and record why.</p><div class="ref bp">Practitioner practice</div></li><li id="DA-05"><div class="row"><span class="id">DA-05</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Data engineer</span></div><h4>Load SEC filings from EDGAR</h4><p>Pull 10-K, 10-Q and 8-K filings within the SEC&#x27;s fair access limits and with a declared user agent. Earnings releases arrive as 8-K Item 2.02 exhibits.</p><div class="ref">Form 10-K; Form 10-Q; Form 8-K Item 2.02; SEC Accessing EDGAR Data</div></li><li id="DA-06"><div class="row"><span class="id">DA-06</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Data engineer</span></div><h4>Load four quarters of earnings call transcripts</h4><p>Only from a source whose licence allows storage and model use. Transcripts are not SEC filings.</p><div class="ref">NIST AI RMF MAP 4.1; CFA AI 2022 Exhibit 4</div></li><li id="DA-07"><div class="row"><span class="id">DA-07</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Data engineer</span></div><h4>Load prices and financial data</h4><p>Prices, share counts and reported financials. XBRL data from the SEC&#x27;s own APIs, plus a market data source whose licence permits this use.</p><div class="ref">SEC Accessing EDGAR Data</div></li><li id="DA-08"><div class="row"><span class="id">DA-08</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Data engineer</span></div><h4>Load news and material events</h4><p>Material events come mostly from 8-K filings. Any news feed must be licensed for model use.</p><div class="ref bp">Form 8-K; Practitioner practice</div></li><li id="DA-09"><div class="row"><span class="id">DA-09</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Data engineer</span></div><h4>Stamp every document with its as-of date</h4><p>Use the EDGAR acceptance time, not the period end. A filing accepted after the market close counts from the next trading day. A 10-K is due 60 to 90 days after year end and a 10-Q 40 to 45 days after quarter end, by filer size, and many arrive earlier. Amendments and restatements get their own date.</p><div class="ref">Form 10-K Gen. Instr. A(2); Form 10-Q Gen. Instr. A.1; SEC Accessing EDGAR Data</div></li><li id="DA-10"><div class="row"><span class="id">DA-10</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Data engineer</span></div><h4>Split and index the documents</h4><p>Chunk each document and keep its source, section and as-of date on every chunk, so every answer can cite all three.</p><div class="ref">NIST AI 600-1 MS-2.5-005</div></li><li id="DA-11"><div class="row"><span class="id">DA-11</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Pilot lead</span></div><h4>Test the model on a gold question set</h4><p>Analysts write about 50 questions with known answers from the filings. Half are held back from whoever tunes the library. Score the model&#x27;s answers and citations before week 2, and again in week 5.</p><div class="ref">CFA SoPH V(A) p.131; NIST AI 600-1 MP-2.3-001</div></li><li id="DA-D1"><div class="row"><span class="id">DA-D1</span><span class="chip" style="background:#EBE5F3;color:#4B3576"><i style="background:#4B3576"></i>Decision gate</span><span class="own">Pilot lead</span></div><h4>Fit to use in week 2?</h4><p>The pilot lead compares the gold-set score with the threshold set in MD-05. A miss allows one fix and retest. A second miss stops the pilot before any research depends on the model.</p><div class="ref">CFA SoPH V(A) p.131; NIST AI RMF MANAGE 1.1</div></li></ol></div></section>
+<section class="phase" id="SC"><div class="ph-head"><div class="badge">3</div><div><div class="kick">Week 2 · Stage 1</div><h2>Screening and Watchlist</h2></div></div>
+<div class="authority"><span class="l">What good looks like</span>Screens run in code on dated data. The model can write and explain the code, but never does the arithmetic in prose.</div>
+<div class="anchors"><b>Standards</b> · French Library value sorts; Russell v7.2 s8.2.1; CFA SoPH V(A) p.131</div>
+<div class="ph-body"><figure class="diagram"><pre class="mermaid">flowchart TD
+  classDef llm fill:#E2EFE6,stroke:#9CC3A8,color:#1E3A28,stroke-width:1px
+  classDef hyb fill:#F6EDD6,stroke:#D9C38A,color:#4A3609,stroke-width:1px
+  classDef hum fill:#F6E3DF,stroke:#DDAFA5,color:#5C1F16,stroke-width:1px
+  classDef gate fill:#EBE5F3,stroke:#B7A6D6,color:#33244F,stroke-width:1px
+  classDef ext fill:#FAF8F4,stroke:#BDB6A8,color:#5D6B7A,stroke-dasharray:4 3
+  classDef term fill:#13202F,stroke:#13202F,color:#F7F5F0
+  SC_01[&quot;SC-01: Fix the screen definitions and thresholds&quot;]:::hum
+  SC_02[&quot;SC-02: Run the five valuation screens&quot;]:::llm
+  SC_03[&quot;SC-03: Apply quality tests&quot;]:::hyb
+  SC_04[&quot;SC-04: Review the watchlist&quot;]:::hyb
+  MD[[&quot;Week 1&lt;br/&gt;Mandate and Evaluation&lt;br/&gt;Design&quot;]]:::ext
+  MD --&gt; SC_01
+  DA[[&quot;Week 1&lt;br/&gt;Universe and Dated Data&quot;]]:::ext
+  DA --&gt; SC_01
+  SC_01 --&gt; SC_02
+  SC_02 --&gt; SC_03
+  SC_03 --&gt; SC_04
+  RS_01[[&quot;RS-01: Set up a dossier for each name&quot;]]:::ext
+  SC_04 --&gt; RS_01</pre></figure><ol class="tasks"><li id="SC-01"><div class="row"><span class="id">SC-01</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Portfolio manager</span></div><h4>Fix the screen definitions and thresholds</h4><p>Five value measures. Price to earnings, price to book, EV to EBITDA, free cash flow yield and dividend yield. Thresholds are set within each sector, since raw ratios pile value names into a few sectors.</p><div class="ref bp">French Library (B/M, E/P, CF/P, D/P sorts); Russell v7.2 s8.2.1; EV/EBITDA and FCF yield are Practitioner practice</div></li><li id="SC-02"><div class="row"><span class="id">SC-02</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Quant analyst</span></div><h4>Run the five valuation screens</h4><p>Computed in code on as-of data across the whole universe. The output lists each name&#x27;s rank on each measure.</p><div class="ref">CFA SoPH V(A) p.131</div></li><li id="SC-03"><div class="row"><span class="id">SC-03</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Research analyst</span></div><h4>Apply quality tests</h4><p>Free cash flow, leverage and dividend coverage tests to weed out value traps. A model applies them and drafts the reasons. The analyst checks the borderline cases.</p><div class="ref bp">Practitioner practice</div></li><li id="SC-04"><div class="row"><span class="id">SC-04</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Portfolio manager</span></div><h4>Review the watchlist</h4><p>About 30 to 50 names, with the sector spread and a first factor check. The PM can add or strike names, with the reason logged.</p><div class="ref">CFA SoPH V(A) p.130</div></li></ol></div></section>
+<section class="phase" id="RS"><div class="ph-head"><div class="badge">4</div><div><div class="kick">Week 2 · Stage 2</div><h2>Research Dossiers and Sourced Library</h2></div></div>
+<div class="authority"><span class="l">What good looks like</span>Every answer the library gives points to a dated passage in a named document.</div>
+<div class="anchors"><b>Standards</b> · SEC Form 10-K Items 1, 1A, 7, 7A, 8; Form 10-Q Part I; NIST AI 600-1 s2.2, MS-2.5-003</div>
+<div class="ph-body"><figure class="diagram"><pre class="mermaid">flowchart TD
+  classDef llm fill:#E2EFE6,stroke:#9CC3A8,color:#1E3A28,stroke-width:1px
+  classDef hyb fill:#F6EDD6,stroke:#D9C38A,color:#4A3609,stroke-width:1px
+  classDef hum fill:#F6E3DF,stroke:#DDAFA5,color:#5C1F16,stroke-width:1px
+  classDef gate fill:#EBE5F3,stroke:#B7A6D6,color:#33244F,stroke-width:1px
+  classDef ext fill:#FAF8F4,stroke:#BDB6A8,color:#5D6B7A,stroke-dasharray:4 3
+  classDef term fill:#13202F,stroke:#13202F,color:#F7F5F0
+  RS_01[&quot;RS-01: Set up a dossier for each name&quot;]:::llm
+  RS_02[&quot;RS-02: Extract from the 10-K and 10-Q&quot;]:::llm
+  RS_03[&quot;RS-03: Summarize four quarters of earnings calls&quot;]:::llm
+  RS_04[&quot;RS-04: Extract management commentary and guidance&quot;]:::llm
+  RS_05[&quot;RS-05: Map competitors and peers&quot;]:::hyb
+  RS_06[&quot;RS-06: Log material news and events&quot;]:::llm
+  RS_07[&quot;RS-07: Build the sourced research library&quot;]:::llm
+  RS_08[&quot;RS-08: Spot-check dossier claims each day&quot;]:::hum
+  RS_01 --&gt; RS_02
+  RS_01 --&gt; RS_03
+  RS_01 --&gt; RS_04
+  RS_01 --&gt; RS_05
+  RS_01 --&gt; RS_06
+  RS_02 --&gt; RS_07
+  RS_03 --&gt; RS_07
+  RS_04 --&gt; RS_07
+  RS_05 --&gt; RS_07
+  RS_06 --&gt; RS_07
+  RS_07 --&gt; RS_08
+  DB_01[[&quot;DB-01: Draft the bull case&quot;]]:::ext
+  RS_08 --&gt; DB_01
+  DB_02[[&quot;DB-02: Draft the bear case&quot;]]:::ext
+  RS_08 --&gt; DB_02</pre></figure><ol class="tasks"><li id="RS-01"><div class="row"><span class="id">RS-01</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Set up a dossier for each name</h4><p>One template per name, so dossiers can be compared and checked the same way.</p><div class="ref bp">Practitioner practice</div></li><li id="RS-02"><div class="row"><span class="id">RS-02</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Extract from the 10-K and 10-Q</h4><p>Business, risk factors, management&#x27;s discussion, market risk and the financial statements, each with its citation.</p><div class="ref">Form 10-K Items 1, 1A, 7, 7A, 8; Form 10-Q Part I Items 1 to 3, Part II Item 1A</div></li><li id="RS-03"><div class="row"><span class="id">RS-03</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Summarize four quarters of earnings calls</h4><p>What management said, what analysts asked and what changed from quarter to quarter.</p><div class="ref bp">Practitioner practice</div></li><li id="RS-04"><div class="row"><span class="id">RS-04</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Extract management commentary and guidance</h4><p>Quote guidance word for word with its date. Guidance is the company&#x27;s opinion, and the dossier marks it that way.</p><div class="ref">CFA SoPH p.145</div></li><li id="RS-05"><div class="row"><span class="id">RS-05</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Research analyst</span></div><h4>Map competitors and peers</h4><p>The model proposes peers from the filings. The analyst confirms them, because the peer set drives the comparables valuation.</p><div class="ref">CFA SoPH V(A) p.130</div></li><li id="RS-06"><div class="row"><span class="id">RS-06</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Log material news and events</h4><p>Dated events from 8-K filings and licensed news, each tied to the name it affects.</p><div class="ref">Form 8-K</div></li><li id="RS-07"><div class="row"><span class="id">RS-07</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Build the sourced research library</h4><p>A searchable store of every document, with links between companies. Answers must cite document, section and as-of date. v1 called this a knowledge graph.</p><div class="ref">NIST AI 600-1 MS-2.5-003, MS-2.5-005</div></li><li id="RS-08"><div class="row"><span class="id">RS-08</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Research analyst</span></div><h4>Spot-check dossier claims each day</h4><p>A second analyst checks a random sample of claims against their sources. Every miss goes in the decision log.</p><div class="ref">NIST AI 600-1 s2.2, MS-2.5-003</div></li></ol></div></section>
+<section class="phase" id="DB"><div class="ph-head"><div class="badge">5</div><div><div class="kick">Week 3 · Stage 3</div><h2>Bull and Bear Debate</h2></div></div>
+<div class="authority"><span class="l">What good looks like</span>The bear case gets the same effort as the bull case, and a person decides which names go forward.</div>
+<div class="anchors"><b>Standards</b> · CFA Code V(A); CFA SoPH p.132</div>
+<div class="ph-body"><figure class="diagram"><pre class="mermaid">flowchart TD
+  classDef llm fill:#E2EFE6,stroke:#9CC3A8,color:#1E3A28,stroke-width:1px
+  classDef hyb fill:#F6EDD6,stroke:#D9C38A,color:#4A3609,stroke-width:1px
+  classDef hum fill:#F6E3DF,stroke:#DDAFA5,color:#5C1F16,stroke-width:1px
+  classDef gate fill:#EBE5F3,stroke:#B7A6D6,color:#33244F,stroke-width:1px
+  classDef ext fill:#FAF8F4,stroke:#BDB6A8,color:#5D6B7A,stroke-dasharray:4 3
+  classDef term fill:#13202F,stroke:#13202F,color:#F7F5F0
+  DB_01[&quot;DB-01: Draft the bull case&quot;]:::llm
+  DB_02[&quot;DB-02: Draft the bear case&quot;]:::llm
+  DB_03[&quot;DB-03: Find the strongest counterarguments&quot;]:::llm
+  DB_04[&quot;DB-04: Check correlation risk across names&quot;]:::hyb
+  DB_05[&quot;DB-05: Review the debate&quot;]:::hum
+  DB_D1{&quot;DB-D1: Advance to a full thesis?&quot;}:::gate
+  DB_01 --&gt; DB_03
+  DB_02 --&gt; DB_03
+  DB_03 --&gt; DB_04
+  DB_04 --&gt; DB_05
+  DB_05 --&gt; DB_D1
+  TH_01[[&quot;TH-01: Draft the memo from the library&quot;]]:::ext
+  DB_D1 --&gt;|Advance| TH_01
+  END_DROP([&quot;Name dropped, reason logged&quot;]):::term
+  DB_D1 --&gt;|Drop| END_DROP</pre></figure><ol class="tasks"><li id="DB-01"><div class="row"><span class="id">DB-01</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Draft the bull case</h4><p>Built only from the sourced library, with citations.</p><div class="ref">CFA Code V(A)</div></li><li id="DB-02"><div class="row"><span class="id">DB-02</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Draft the bear case</h4><p>Same rules. It must include the outcomes a buyer would least like to see.</p><div class="ref">CFA SoPH p.132</div></li><li id="DB-03"><div class="row"><span class="id">DB-03</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Find the strongest counterarguments</h4><p>The points each side has not answered, ranked by how much they would move the value.</p><div class="ref bp">Practitioner practice</div></li><li id="DB-04"><div class="row"><span class="id">DB-04</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Quant analyst</span></div><h4>Check correlation risk across names</h4><p>Names that share a driver, such as one commodity or one customer, are flagged as a cluster.</p><div class="ref bp">Practitioner practice</div></li><li id="DB-05"><div class="row"><span class="id">DB-05</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Portfolio manager</span></div><h4>Review the debate</h4><p>The PM reads both cases and the open points for every name.</p><div class="ref">CFA Code V(A)</div></li><li id="DB-D1"><div class="row"><span class="id">DB-D1</span><span class="chip" style="background:#EBE5F3;color:#4B3576"><i style="background:#4B3576"></i>Decision gate</span><span class="own">Portfolio manager</span></div><h4>Advance to a full thesis?</h4><p>About 20 to 25 names go forward. Twenty is the minimum that can fill the sleeve under a 5 percent cap, and only at equal weights, so Gate 1 rejections fall back on the completion rule in MD-03. The reason for each drop is logged.</p><div class="ref bp">CFA Code V(A); Practitioner practice</div></li></ol></div></section>
+<section class="phase" id="TH"><div class="ph-head"><div class="badge">6</div><div><div class="kick">Week 3 · Stage 4</div><h2>Thesis Memos</h2></div></div>
+<div class="authority"><span class="l">What good looks like</span>The model writes the first draft. The PM owns every number, every view and the kill criteria.</div>
+<div class="anchors"><b>Standards</b> · CFA Code V(A), V(B)(5); CFA SoPH pp.131-132, 144-145; NIST AI 600-1 s2.7</div>
+<div class="ph-body"><figure class="diagram"><pre class="mermaid">flowchart TD
+  classDef llm fill:#E2EFE6,stroke:#9CC3A8,color:#1E3A28,stroke-width:1px
+  classDef hyb fill:#F6EDD6,stroke:#D9C38A,color:#4A3609,stroke-width:1px
+  classDef hum fill:#F6E3DF,stroke:#DDAFA5,color:#5C1F16,stroke-width:1px
+  classDef gate fill:#EBE5F3,stroke:#B7A6D6,color:#33244F,stroke-width:1px
+  classDef ext fill:#FAF8F4,stroke:#BDB6A8,color:#5D6B7A,stroke-dasharray:4 3
+  classDef term fill:#13202F,stroke:#13202F,color:#F7F5F0
+  TH_01[&quot;TH-01: Draft the memo from the library&quot;]:::hyb
+  TH_02[&quot;TH-02: Summary and recommendation&quot;]:::hyb
+  TH_03[&quot;TH-03: Valuation&quot;]:::hyb
+  TH_04[&quot;TH-04: Catalysts and timeline&quot;]:::hyb
+  TH_05[&quot;TH-05: Risk register and kill criteria&quot;]:::hyb
+  TH_07[&quot;TH-07: Seed test errors in sample drafts&quot;]:::hum
+  TH_06[&quot;TH-06: PM edits and signs each memo&quot;]:::hum
+  TH_01 --&gt; TH_02
+  TH_01 --&gt; TH_03
+  TH_01 --&gt; TH_04
+  TH_01 --&gt; TH_05
+  TH_02 --&gt; TH_07
+  TH_03 --&gt; TH_07
+  TH_04 --&gt; TH_07
+  TH_05 --&gt; TH_07
+  TH_07 --&gt; TH_06
+  EG_01[[&quot;EG-01: Attack the thesis&quot;]]:::ext
+  TH_06 --&gt; EG_01</pre></figure><ol class="tasks"><li id="TH-01"><div class="row"><span class="id">TH-01</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Research analyst</span></div><h4>Draft the memo from the library</h4><p>The model drafts each section with citations and marks facts apart from opinions and estimates.</p><div class="ref">CFA Code V(B)(5); CFA SoPH p.145</div></li><li id="TH-02"><div class="row"><span class="id">TH-02</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Portfolio manager</span></div><h4>Summary and recommendation</h4><p>The model drafts the summary. The recommendation is the PM&#x27;s alone.</p><div class="ref">CFA Code V(A)</div></li><li id="TH-03"><div class="row"><span class="id">TH-03</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Research analyst</span></div><h4>Valuation</h4><p>A DCF and comparables with bull, base and bear cases, in a spreadsheet or code the analyst can audit. The model proposes inputs and cites where each came from.</p><div class="ref">CFA SoPH pp.131-132</div></li><li id="TH-04"><div class="row"><span class="id">TH-04</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Research analyst</span></div><h4>Catalysts and timeline</h4><p>Dated events that would show the thesis working or failing. Each is an estimate and is labeled so.</p><div class="ref">CFA SoPH p.145</div></li><li id="TH-05"><div class="row"><span class="id">TH-05</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Portfolio manager</span></div><h4>Risk register and kill criteria</h4><p>Kill criteria must be dated and measurable, such as a margin floor by a stated quarter. The PM commits to them before Gate 1, and the replay watches them.</p><div class="ref">CFA SoPH p.144</div></li><li id="TH-07"><div class="row"><span class="id">TH-07</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Pilot lead</span></div><h4>Seed test errors in sample drafts</h4><p>The pilot lead plants three known errors in some drafts without telling the reviewer. The catch rate shows whether review is real or a rubber stamp.</p><div class="ref">NIST AI 600-1 s2.7</div></li><li id="TH-06"><div class="row"><span class="id">TH-06</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Portfolio manager</span></div><h4>PM edits and signs each memo</h4><p>The PM challenges the assumptions, sets conviction and signs. Edit time is logged for the scorecard.</p><div class="ref">CFA Code V(A), V(C)</div></li></ol></div></section>
+<section class="phase" id="EG"><div class="ph-head"><div class="badge">7</div><div><div class="kick">Week 4</div><h2>Gate 1. Pre-IC Challenge and Entry Decision</h2></div></div>
+<div class="authority"><span class="l">What good looks like</span>Each name faces the questions an investment committee would ask before the PM decides.</div>
+<div class="anchors"><b>Standards</b> · CFA Code V(A); NIST AI RMF MAP 3.5</div>
+<div class="ph-body"><figure class="diagram"><pre class="mermaid">flowchart TD
+  classDef llm fill:#E2EFE6,stroke:#9CC3A8,color:#1E3A28,stroke-width:1px
+  classDef hyb fill:#F6EDD6,stroke:#D9C38A,color:#4A3609,stroke-width:1px
+  classDef hum fill:#F6E3DF,stroke:#DDAFA5,color:#5C1F16,stroke-width:1px
+  classDef gate fill:#EBE5F3,stroke:#B7A6D6,color:#33244F,stroke-width:1px
+  classDef ext fill:#FAF8F4,stroke:#BDB6A8,color:#5D6B7A,stroke-dasharray:4 3
+  classDef term fill:#13202F,stroke:#13202F,color:#F7F5F0
+  EG_01[&quot;EG-01: Attack the thesis&quot;]:::llm
+  EG_02[&quot;EG-02: Draft the five hardest IC questions&quot;]:::llm
+  EG_03[&quot;EG-03: Find data gaps and inconsistencies&quot;]:::llm
+  EG_04[&quot;EG-04: Compile the challenge report&quot;]:::hyb
+  EG_D1{&quot;EG-D1: Gate 1. Enter the portfolio?&quot;}:::gate
+  EG_01 --&gt; EG_02
+  EG_02 --&gt; EG_03
+  EG_03 --&gt; EG_04
+  EG_04 --&gt; EG_D1
+  PC_01[[&quot;PC-01: Load the approved names&quot;]]:::ext
+  EG_D1 --&gt;|Approve| PC_01
+  TH_01[[&quot;TH-01: Draft the memo from the library&quot;]]:::ext
+  EG_D1 --&gt;|Refine, once only| TH_01
+  END_DROP([&quot;Name dropped, reason logged&quot;]):::term
+  EG_D1 --&gt;|Reject| END_DROP</pre></figure><ol class="tasks"><li id="EG-01"><div class="row"><span class="id">EG-01</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Attack the thesis</h4><p>The model looks for the weakest assumptions, citing the evidence against each.</p><div class="ref">CFA SoPH p.132</div></li><li id="EG-02"><div class="row"><span class="id">EG-02</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Draft the five hardest IC questions</h4><p>The questions an experienced committee member would ask first.</p><div class="ref bp">Practitioner practice</div></li><li id="EG-03"><div class="row"><span class="id">EG-03</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Find data gaps and inconsistencies</h4><p>Places where the memo, the model and the filings disagree, or where a claim has no source.</p><div class="ref">NIST AI 600-1 s2.2</div></li><li id="EG-04"><div class="row"><span class="id">EG-04</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Research analyst</span></div><h4>Compile the challenge report</h4><p>One report per name, with the analyst&#x27;s answer to each question.</p><div class="ref bp">Practitioner practice</div></li><li id="EG-D1"><div class="row"><span class="id">EG-D1</span><span class="chip" style="background:#EBE5F3;color:#4B3576"><i style="background:#4B3576"></i>Decision gate</span><span class="own">Portfolio manager</span></div><h4>Gate 1. Enter the portfolio?</h4><p>The PM decides name by name and logs where the decision went against the model&#x27;s challenge. A name can go back for more work once. Anything unresolved at the end of week 4 is rejected.</p><div class="ref">CFA Code V(A); NIST AI RMF MAP 3.5</div></li></ol></div></section>
+<section class="phase" id="PC"><div class="ph-head"><div class="badge">8</div><div><div class="kick">Week 4 · Stage 5</div><h2>Portfolio Construction</h2></div></div>
+<div class="authority"><span class="l">What good looks like</span>Weights meet the mandate, every position can be traded at its size, and the PM signs the result.</div>
+<div class="anchors"><b>Standards</b> · CFA Code III(C)(2); CFA SoPH pp.132, 144; French Library</div>
+<div class="ph-body"><figure class="diagram"><pre class="mermaid">flowchart TD
+  classDef llm fill:#E2EFE6,stroke:#9CC3A8,color:#1E3A28,stroke-width:1px
+  classDef hyb fill:#F6EDD6,stroke:#D9C38A,color:#4A3609,stroke-width:1px
+  classDef hum fill:#F6E3DF,stroke:#DDAFA5,color:#5C1F16,stroke-width:1px
+  classDef gate fill:#EBE5F3,stroke:#B7A6D6,color:#33244F,stroke-width:1px
+  classDef ext fill:#FAF8F4,stroke:#BDB6A8,color:#5D6B7A,stroke-dasharray:4 3
+  classDef term fill:#13202F,stroke:#13202F,color:#F7F5F0
+  PC_01[&quot;PC-01: Load the approved names&quot;]:::llm
+  PC_02[&quot;PC-02: Set starting weights from conviction&quot;]:::hyb
+  PC_03[&quot;PC-03: Estimate factor exposures&quot;]:::llm
+  PC_04[&quot;PC-04: Check the factor targets&quot;]:::llm
+  PC_05[&quot;PC-05: Adjust weights within the limits&quot;]:::llm
+  PC_06[&quot;PC-06: Check liquidity and how each name is held&quot;]:::hyb
+  PC_07[&quot;PC-07: Stress test on history&quot;]:::hyb
+  PC_08[&quot;PC-08: Check drawdown and tracking error against the mandate&quot;]:::hyb
+  PC_09[&quot;PC-09: Check correlation under stress&quot;]:::hyb
+  PC_10[&quot;PC-10: Assemble the portfolio pack&quot;]:::hyb
+  PC_D1{&quot;PC-D1: Sign off the model portfolio?&quot;}:::gate
+  PC_01 --&gt; PC_02
+  PC_02 --&gt; PC_03
+  PC_03 --&gt; PC_04
+  PC_04 --&gt;|Met| PC_06
+  PC_04 --&gt;|Not met| PC_05
+  PC_05 --&gt; PC_03
+  PC_05 --&gt;|Not reachable within limits| PC_D1
+  PC_06 --&gt; PC_07
+  PC_07 --&gt; PC_08
+  PC_08 --&gt; PC_09
+  PC_09 --&gt; PC_10
+  PC_10 --&gt; PC_D1
+  EV_01[[&quot;EV-01: Package the portfolio summary&quot;]]:::ext
+  PC_D1 --&gt;|Sign off| EV_01
+  MN_01[[&quot;MN-01: Set the replay date&quot;]]:::ext
+  PC_D1 --&gt;|Sign off, replay runs| MN_01
+  PC_D1 --&gt;|Rework| PC_02</pre></figure><ol class="tasks"><li id="PC-01"><div class="row"><span class="id">PC-01</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Quant analyst</span></div><h4>Load the approved names</h4><p>With each memo&#x27;s conviction, kill criteria and liquidity data.</p><div class="ref bp">Practitioner practice</div></li><li id="PC-02"><div class="row"><span class="id">PC-02</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Portfolio manager</span></div><h4>Set starting weights from conviction</h4><p>The model proposes weights from the PM&#x27;s conviction scores. The PM sets them.</p><div class="ref">CFA Code III(C)(2)</div></li><li id="PC-03"><div class="row"><span class="id">PC-03</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Quant analyst</span></div><h4>Estimate factor exposures</h4><p>Value and size loadings for the weighted portfolio, built from each holding&#x27;s past returns against the Fama French factors over the window the mandate names, with their standard errors. The holdings&#x27; book-to-price and size confirm the direction. Profitability exposure is shown as well, since the quality tests create one.</p><div class="ref">French Library, factor descriptions</div></li><li id="PC-04"><div class="row"><span class="id">PC-04</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Quant analyst</span></div><h4>Check the factor targets</h4><p>A test in code against the mandate&#x27;s value and size targets.</p><div class="ref">CFA Code III(C)(2)</div></li><li id="PC-05"><div class="row"><span class="id">PC-05</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Quant analyst</span></div><h4>Adjust weights within the limits</h4><p>An optimizer moves weights inside the position limits and the risk budget, then the targets are tested again.</p><div class="ref bp">Practitioner practice</div></li><li id="PC-06"><div class="row"><span class="id">PC-06</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Quant analyst</span></div><h4>Check liquidity and how each name is held</h4><p>Days to trade each position at a set share of average daily volume. Every name is held directly in a separately managed account. v1 routed large caps to an ETF, which cannot express a single-name thesis.</p><div class="ref">CFA SoPH p.144</div></li><li id="PC-07"><div class="row"><span class="id">PC-07</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Quant analyst</span></div><h4>Stress test on history</h4><p>Run the portfolio through 2008 to 2009, the 2020 drawdown and 2022. Names without that history need a stated proxy.</p><div class="ref">CFA SoPH p.132</div></li><li id="PC-08"><div class="row"><span class="id">PC-08</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Quant analyst</span></div><h4>Check drawdown and tracking error against the mandate</h4><p>Against the limits set in MD-03.</p><div class="ref">CFA Code III(C)(2)</div></li><li id="PC-09"><div class="row"><span class="id">PC-09</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Quant analyst</span></div><h4>Check correlation under stress</h4><p>How much the positions move together in the stress periods, by cluster.</p><div class="ref bp">Practitioner practice</div></li><li id="PC-10"><div class="row"><span class="id">PC-10</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Portfolio manager</span></div><h4>Assemble the portfolio pack</h4><p>Positions and weights, the signed memos and a risk report with factor exposures, concentration, liquidity and drawdown.</p><div class="ref">CFA Code V(B)(3), V(B)(4)</div></li><li id="PC-D1"><div class="row"><span class="id">PC-D1</span><span class="chip" style="background:#EBE5F3;color:#4B3576"><i style="background:#4B3576"></i>Decision gate</span><span class="own">Portfolio manager</span></div><h4>Sign off the model portfolio?</h4><p>The PM signs the portfolio that goes to the mock IC, or sends it back to reweight.</p><div class="ref">CFA Code III(C)(2)</div></li></ol></div></section>
+<section class="phase" id="MN"><div class="ph-head"><div class="badge sub">9</div><div><div class="kick">Optional · Stages 6 and 7</div><h2>Replay of Monitoring and Rebalancing</h2></div></div>
+<div class="authority"><span class="l">What good looks like</span>The replay only counts if neither the data nor the model could have known what happened next.</div>
+<div class="anchors"><b>Standards</b> · Glasserman and Lin 2023; GIPS 2020 1.A.27, 4.C.48; CFA SoPH pp.96-97</div>
+<div class="ph-body"><figure class="diagram"><pre class="mermaid">flowchart TD
+  classDef llm fill:#E2EFE6,stroke:#9CC3A8,color:#1E3A28,stroke-width:1px
+  classDef hyb fill:#F6EDD6,stroke:#D9C38A,color:#4A3609,stroke-width:1px
+  classDef hum fill:#F6E3DF,stroke:#DDAFA5,color:#5C1F16,stroke-width:1px
+  classDef gate fill:#EBE5F3,stroke:#B7A6D6,color:#33244F,stroke-width:1px
+  classDef ext fill:#FAF8F4,stroke:#BDB6A8,color:#5D6B7A,stroke-dasharray:4 3
+  classDef term fill:#13202F,stroke:#13202F,color:#F7F5F0
+  MN_01[&quot;MN-01: Set the replay date&quot;]:::hum
+  MN_02[&quot;MN-02: Rebuild the portfolio as of that date&quot;]:::hyb
+  MN_03[&quot;MN-03: Release the data that followed&quot;]:::llm
+  MN_04[&quot;MN-04: Track each tagged assumption&quot;]:::llm
+  MN_05[&quot;MN-05: Raise drift alerts&quot;]:::llm
+  MN_06[&quot;MN-06: Draft a follow-up note for each flagged name&quot;]:::hyb
+  MN_D1{&quot;MN-D1: Gate 2. Exit, hold or add?&quot;}:::gate
+  MN_07[&quot;MN-07: Write the exit post-mortem&quot;]:::hyb
+  MN_08[&quot;MN-08: Recalculate factor exposures&quot;]:::llm
+  MN_09[&quot;MN-09: Check weights against the mandate&quot;]:::hyb
+  MN_10[&quot;MN-10: Produce the updated snapshot, labeled theoretical&quot;]:::llm
+  MN_01 --&gt; MN_02
+  MN_02 --&gt; MN_03
+  MN_03 --&gt; MN_04
+  MN_04 --&gt; MN_05
+  MN_05 --&gt; MN_06
+  MN_06 --&gt; MN_D1
+  MN_D1 --&gt;|Exit| MN_07
+  MN_D1 --&gt;|Hold| MN_08
+  MN_D1 --&gt;|Add| MN_08
+  MN_07 --&gt; MN_08
+  MN_08 --&gt; MN_09
+  MN_09 --&gt; MN_10
+  EV_04[[&quot;EV-04: Produce portfolio analytics&quot;]]:::ext
+  MN_10 --&gt;|If it ran alongside| EV_04</pre></figure><ol class="tasks"><li id="MN-01"><div class="row"><span class="id">MN-01</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Pilot lead</span></div><h4>Set the replay date</h4><p>About six months back and after the model&#x27;s training cutoff, with the model&#x27;s web search turned off for the whole replay. If no such date exists, label the results as possibly contaminated. Removing company names helps with headlines, but a full filing usually gives its company away, so it is no cure.</p><div class="ref">Glasserman and Lin 2023</div></li><li id="MN-02"><div class="row"><span class="id">MN-02</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Portfolio manager</span></div><h4>Rebuild the portfolio as of that date</h4><p>Rerun Stages 1 to 5 on the universe, filings and prices the market had then, including names later delisted. A cut-down set of about 10 names keeps this to a second analyst&#x27;s time. The PM sets kill criteria before any later data is loaded.</p><div class="ref">Russell v7.2 s4.2.3; Form 10-K Gen. Instr. A(2)</div></li><li id="MN-03"><div class="row"><span class="id">MN-03</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Data engineer</span></div><h4>Release the data that followed</h4><p>Feed in filings and prices in order of their as-of dates, never all at once.</p><div class="ref">SEC Accessing EDGAR Data</div></li><li id="MN-04"><div class="row"><span class="id">MN-04</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Track each tagged assumption</h4><p>Each memo assumption and kill criterion is tagged. The model compares it with each new document as that document&#x27;s as-of date arrives.</p><div class="ref">CFA SoPH pp.144-145</div></li><li id="MN-05"><div class="row"><span class="id">MN-05</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Raise drift alerts</h4><p>For example, the base case assumed 20 percent margins and the new 10-Q shows 16. Each alert cites the new document.</p><div class="ref">NIST AI 600-1 MS-2.5-003</div></li><li id="MN-06"><div class="row"><span class="id">MN-06</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Research analyst</span></div><h4>Draft a follow-up note for each flagged name</h4><p>What changed, which kill criterion it touches and the analyst&#x27;s view.</p><div class="ref">CFA SoPH pp.144-145</div></li><li id="MN-D1"><div class="row"><span class="id">MN-D1</span><span class="chip" style="background:#EBE5F3;color:#4B3576"><i style="background:#4B3576"></i>Decision gate</span><span class="own">Portfolio manager</span></div><h4>Gate 2. Exit, hold or add?</h4><p>The PM decides for each flagged name. A hit kill criterion means exit unless the PM records why not.</p><div class="ref">CFA Code V(A); CFA SoPH p.144</div></li><li id="MN-07"><div class="row"><span class="id">MN-07</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Research analyst</span></div><h4>Write the exit post-mortem</h4><p>What the thesis assumed, what broke and whether the alert came in time.</p><div class="ref">CFA Code V(C)</div></li><li id="MN-08"><div class="row"><span class="id">MN-08</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Quant analyst</span></div><h4>Recalculate factor exposures</h4><p>After the changes.</p><div class="ref">French Library</div></li><li id="MN-09"><div class="row"><span class="id">MN-09</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Quant analyst</span></div><h4>Check weights against the mandate</h4><p>Position limits, risk budget and liquidity.</p><div class="ref">CFA Code III(C)(2)</div></li><li id="MN-10"><div class="row"><span class="id">MN-10</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Quant analyst</span></div><h4>Produce the updated snapshot, labeled theoretical</h4><p>Replay returns are theoretical performance. They are shown after estimated trading costs and fees, labeled that way, and never joined to an actual track record.</p><div class="ref">GIPS 2020 1.A.27, 4.C.48 and Glossary; CFA SoPH pp.96-97</div></li></ol></div></section>
+<section class="phase" id="EV"><div class="ph-head"><div class="badge">10</div><div><div class="kick">Week 5</div><h2>Evaluation and Mock Investment Committee</h2></div></div>
+<div class="authority"><span class="l">What good looks like</span>Reviewers score blind against rules written in week 1, and the verdict follows the rules.</div>
+<div class="anchors"><b>Standards</b> · NIST AI RMF MEASURE 1.3, MANAGE 1.1; NIST AI 600-1 MS-2.5-003; CFA Code III(D), V(B)</div>
+<div class="ph-body"><figure class="diagram"><pre class="mermaid">flowchart TD
+  classDef llm fill:#E2EFE6,stroke:#9CC3A8,color:#1E3A28,stroke-width:1px
+  classDef hyb fill:#F6EDD6,stroke:#D9C38A,color:#4A3609,stroke-width:1px
+  classDef hum fill:#F6E3DF,stroke:#DDAFA5,color:#5C1F16,stroke-width:1px
+  classDef gate fill:#EBE5F3,stroke:#B7A6D6,color:#33244F,stroke-width:1px
+  classDef ext fill:#FAF8F4,stroke:#BDB6A8,color:#5D6B7A,stroke-dasharray:4 3
+  classDef term fill:#13202F,stroke:#13202F,color:#F7F5F0
+  EV_01[&quot;EV-01: Package the portfolio summary&quot;]:::llm
+  EV_02[&quot;EV-02: Compile the memos for the IC&quot;]:::llm
+  EV_03[&quot;EV-03: Prepare the library for live questions&quot;]:::llm
+  EV_04[&quot;EV-04: Produce portfolio analytics&quot;]:::llm
+  EV_05[&quot;EV-05: Score source accuracy&quot;]:::hyb
+  EV_06[&quot;EV-06: Audit for look-ahead bias&quot;]:::hyb
+  EV_07[&quot;EV-07: Convene independent reviewers&quot;]:::hum
+  EV_08[&quot;EV-08: Score every memo blind&quot;]:::hum
+  EV_09[&quot;EV-09: Present the construction rationale&quot;]:::hum
+  EV_10[&quot;EV-10: Challenge the position theses&quot;]:::hum
+  EV_11[&quot;EV-11: Query the library live&quot;]:::hyb
+  EV_12[&quot;EV-12: Challenge factor tilts and risk limits&quot;]:::hum
+  EV_D1{&quot;EV-D1: Mock IC decision&quot;}:::gate
+  EV_13[&quot;EV-13: Compile the scorecard&quot;]:::hyb
+  EV_D2{&quot;EV-D2: Pilot verdict&quot;}:::gate
+  PC[[&quot;Week 4&lt;br/&gt;Stage 5. Portfolio&lt;br/&gt;Construction&quot;]]:::ext
+  PC --&gt; EV_02
+  PC --&gt; EV_03
+  PC --&gt; EV_04
+  EV_01 --&gt; EV_07
+  EV_02 --&gt; EV_07
+  EV_03 --&gt; EV_07
+  EV_04 --&gt; EV_07
+  EV_02 --&gt; EV_05
+  EV_05 --&gt; EV_06
+  EV_06 --&gt; EV_13
+  EV_07 --&gt; EV_08
+  EV_08 --&gt; EV_09
+  EV_09 --&gt; EV_10
+  EV_10 --&gt; EV_11
+  EV_11 --&gt; EV_12
+  EV_12 --&gt; EV_D1
+  EV_D1 --&gt;|Approve| EV_13
+  EV_D1 --&gt;|Approve with conditions| EV_13
+  EV_D1 --&gt;|Decline| EV_13
+  EV_13 --&gt; EV_D2
+  END_GO([&quot;Propose a live pilot&quot;]):::term
+  EV_D2 --&gt;|Every pass rule met| END_GO
+  END_RERUN([&quot;Rerun with changes&quot;]):::term
+  EV_D2 --&gt;|Core rules met, others missed| END_RERUN
+  END_STOP([&quot;Stop the pilot&quot;]):::term
+  EV_D2 --&gt;|A core rule missed| END_STOP</pre></figure><ol class="tasks"><li id="EV-01"><div class="row"><span class="id">EV-01</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Portfolio manager</span></div><h4>Package the portfolio summary</h4><p>Holdings, weights, mandate checks and the main risks on two pages.</p><div class="ref">CFA Code V(B)(4)</div></li><li id="EV-02"><div class="row"><span class="id">EV-02</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Pilot lead</span></div><h4>Compile the memos for the IC</h4><p>Model-assisted and baseline memos in one identical format, so reviewers cannot tell them apart.</p><div class="ref bp">Practitioner practice</div></li><li id="EV-03"><div class="row"><span class="id">EV-03</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Research analyst</span></div><h4>Prepare the library for live questions</h4><p>Every answer in the session shows its citation.</p><div class="ref">NIST AI 600-1 MS-2.5-003</div></li><li id="EV-04"><div class="row"><span class="id">EV-04</span><span class="chip" style="background:#E2EFE6;color:#2D5F3D"><i style="background:#2D5F3D"></i>Model-run</span><span class="own">Quant analyst</span></div><h4>Produce portfolio analytics</h4><p>Factor exposures and risk. Attribution only for the replay, labeled theoretical.</p><div class="ref">CFA Code III(D); GIPS 2020 4.C.48</div></li><li id="EV-05"><div class="row"><span class="id">EV-05</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Pilot lead</span></div><h4>Score source accuracy</h4><p>Every figure in each valuation section and 20 other claims per memo are checked against the cited passage. A model flags mismatches. A second analyst confirms each one.</p><div class="ref">NIST AI 600-1 s2.2, MS-2.5-003</div></li><li id="EV-06"><div class="row"><span class="id">EV-06</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Pilot lead</span></div><h4>Audit for look-ahead bias</h4><p>Confirm that no cited source is dated after the as-of date. Ask the model about later events to see whether it already knows them.</p><div class="ref">Glasserman and Lin 2023; SEC Accessing EDGAR Data</div></li><li id="EV-07"><div class="row"><span class="id">EV-07</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Mock IC chair</span></div><h4>Convene independent reviewers</h4><p>Two or three people with investment experience who did not build the theses and do not know which memos had model drafts.</p><div class="ref">NIST AI RMF MEASURE 1.3</div></li><li id="EV-08"><div class="row"><span class="id">EV-08</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Mock IC panel</span></div><h4>Score every memo blind</h4><p>Before the session, so the PM&#x27;s presentation cannot reveal which memos had model drafts. The rubric in the scorecard, one to five on each criterion, for model-assisted and baseline memos alike.</p><div class="ref bp">NIST AI RMF MEASURE 1.3; Practitioner practice</div></li><li id="EV-09"><div class="row"><span class="id">EV-09</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Portfolio manager</span></div><h4>Present the construction rationale</h4><p>The PM presents and answers for the portfolio.</p><div class="ref">CFA Code V(B)(2)</div></li><li id="EV-10"><div class="row"><span class="id">EV-10</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Mock IC panel</span></div><h4>Challenge the position theses</h4><p>Reviewers test each thesis and its kill criteria.</p><div class="ref">CFA Code V(A)</div></li><li id="EV-11"><div class="row"><span class="id">EV-11</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Mock IC panel</span></div><h4>Query the library live</h4><p>The model answers follow-up questions with citations. The panel judges whether the answers hold up.</p><div class="ref">NIST AI 600-1 MS-2.5-003</div></li><li id="EV-12"><div class="row"><span class="id">EV-12</span><span class="chip" style="background:#F6E3DF;color:#8A2F22"><i style="background:#8A2F22"></i>Human-only</span><span class="own">Mock IC panel</span></div><h4>Challenge factor tilts and risk limits</h4><p>Whether the size and value tilts and the risk budget suit the client.</p><div class="ref">CFA Code III(C)(2)</div></li><li id="EV-D1"><div class="row"><span class="id">EV-D1</span><span class="chip" style="background:#EBE5F3;color:#4B3576"><i style="background:#4B3576"></i>Decision gate</span><span class="own">Mock IC chair</span></div><h4>Mock IC decision</h4><p>The chair records the committee&#x27;s decision on the portfolio as if it were live.</p><div class="ref">CFA Code V(A)</div></li><li id="EV-13"><div class="row"><span class="id">EV-13</span><span class="chip" style="background:#F6EDD6;color:#7A5A12"><i style="background:#7A5A12"></i>Model drafts</span><span class="own">Pilot lead</span></div><h4>Compile the scorecard</h4><p>Every measure against its pass rule and baseline. Time logs include review and correction time.</p><div class="ref">NIST AI RMF MEASURE 1.1</div></li><li id="EV-D2"><div class="row"><span class="id">EV-D2</span><span class="chip" style="background:#EBE5F3;color:#4B3576"><i style="background:#4B3576"></i>Decision gate</span><span class="own">CIO</span></div><h4>Pilot verdict</h4><p>The CIO applies the pass rules set in week 1, including which rules are core. A move to live use would need its own governance and compliance sign-off.</p><div class="ref">NIST AI RMF MANAGE 1.1</div></li></ol></div></section>
+<section class="block" id="questions"><div class="eyebrow">For reviewers</div><h2 class="sec">Open questions for practitioners</h2>
+<p class="secnote">The design rests on some judgment calls. These are the ones where a PM or CIO who has run an AI pilot can improve it most. The current split is 17 human-only, 28 model-drafted and 34 model-run steps, with 7 gates.</p>
+<ol class="tasks qs"><li><h4>Should the whole pilot run as of a past date?</h4><p>Then week 5 could score hit rates on real outcomes. The cost is a higher risk that the model already knows what happened, which MN-01 tries to control.</p></li><li><h4>Is a three-to-five-name analyst baseline enough?</h4><p>A fairer test might need more names or a second analyst, which a five-week pilot may not afford.</p></li><li><h4>Which pass rule should decide the verdict?</h4><p>Time saved, memo quality and source accuracy can disagree. Should one failed rule stop the pilot on its own?</p></li><li><h4>Carry 20 names or allow a completion sleeve?</h4><p>Under a 5 percent cap, and with which benchmark. Russell 3000 Value, or Russell 1000 Value with the size tilt as an approved active bet?</p></li></ol></section>
+
+<footer><span>Built at SpaceXAI and shared with permission. Revised in October 2026 from the original map, which is archived at <a href="./v1/">./v1/</a>.</span><span>Every count on this page is computed from one structured spec.</span></footer>
+</main></div>
+<script>
+mermaid.initialize({ startOnLoad:false, theme:'base', securityLevel:'loose',
+  flowchart:{ htmlLabels:true, curve:'basis', nodeSpacing:28, rankSpacing:34, padding:12 },
+  themeVariables:{ fontFamily:'Inter, system-ui, sans-serif', fontSize:'13px', lineColor:'#A59F92', primaryTextColor:'#13202F', edgeLabelBackground:'#FFFFFF', tertiaryTextColor:'#5D6B7A' } });
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(()=>mermaid.run({ querySelector:'.mermaid' }));
+const links=[...document.querySelectorAll('aside.toc a')]; const map=new Map(links.map(a=>[a.getAttribute('href').slice(1),a]));
+const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ links.forEach(l=>l.classList.remove('on')); const a=map.get(e.target.id); if(a) a.classList.add('on'); } }); },{ rootMargin:'-20% 0px -70% 0px' });
+document.querySelectorAll('section[id], #top').forEach(s=>io.observe(s));
+</script>
+</body></html>

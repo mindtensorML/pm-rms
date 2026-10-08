@@ -1,7 +1,11 @@
-# AI-Assisted Portfolio Management Pilot
+# AI-Assisted Value Portfolio Pilot (v2)
 
 Live map at https://mindtensorml.github.io/pm-rms/
 
-This is a five-week pilot workflow for a US equity value portfolio, built from public data only (SEC filings and transcripts). It runs in 7 stages with 2 human decision gates, from mandate and universe to screening, thesis debate, portfolio construction and a mock investment committee. A knowledge graph, a thesis architect, a pre-IC stress test and an assumption watchdog are the places where the model adds the most.
+A five-week test of where a frontier model helps a US equity value team, and of how the team will know. It runs from mandate and evaluation design through screening, research, debate, thesis memos, an entry decision and portfolio construction to a mock investment committee, using public data only. Mapped against the CFA Institute Code and Standards (2024) and the NIST AI Risk Management Framework with its Generative AI Profile.
 
-Built by Caesar Rana, CFA, at SpaceXAI and shared with permission. The map describes a general method and contains no client data. See all the maps at https://mindtensorml.github.io/
+- 10 phases, 79 tasks and 7 decision gates, all owned by people. Measures, a baseline and pass rules are fixed in week 1, before any model output exists.
+- Model drafts are checked against their sources and against dates the market could actually see. A held-back test set and seeded errors check both the model and its reviewers.
+- 34 tasks a model can run with the owner accountable, 28 a model drafts and the owner signs, and 17 stay with people. Entry decisions, the portfolio sign-off and the committee decision stay with people.
+
+Built by Caesar Rana, CFA, APMG Certified PPP Professional (CP3P), at SpaceXAI and shared with permission. Revised in October 2026. The original map is archived in `v1/`. The map describes a general method and contains no client data. The tags are design estimates of what a frontier model could do with the owner accountable, not measured results. See all the maps at https://mindtensorml.github.io/
